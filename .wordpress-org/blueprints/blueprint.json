@@ -29,6 +29,16 @@
 			}
 		},
 		{
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "url",
+				"url": "https://github.com/soderlind/vmfa/releases/latest/download/vmfa.zip"
+			},
+			"options": {
+				"activate": true
+			}
+		},
+		{
 			"step": "runPHP",
 			"code": "<?php require_once 'wordpress/wp-load.php'; wp_insert_term('Photos', 'vmfo_folder'); wp_insert_term('Videos', 'vmfo_folder'); wp_insert_term('Documentation', 'vmfo_folder'); $photos = get_term_by('slug', 'photos', 'vmfo_folder'); if ($photos) { wp_insert_term('Vacation 2025', 'vmfo_folder', array('parent' => $photos->term_id)); } ?>"
 		}
