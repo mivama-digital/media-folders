@@ -33,10 +33,11 @@
 			"pluginData": {
 				"resource": "url",
 				"url": "https://github.com/soderlind/vmfa/releases/latest/download/vmfa.zip"
-			},
-			"options": {
-				"activate": true
 			}
+		},
+		{
+			"step": "activatePlugin",
+			"pluginPath": "vmfa/vmfa.php"
 		},
 		{
 			"step": "runPHP",
