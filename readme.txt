@@ -73,29 +73,6 @@ When inserting media from a block (Image, Gallery, etc.):
 2. Use the folder sidebar to filter
 3. Select your media as usual
 
-**AI Abilities**
-
-With the [AI Ability add-on](https://github.com/soderlind/vmfa-ai-ability) installed, the following Abilities API tools are available for AI agents and MCP adapters:
-
-* **`vmfo/list-folders`** (read-only) – Lists folders with `id`, `name`, `parent_id`, `path`, and `count`.
-* **`vmfo/create-folder`** (write) – Creates a folder with `name` and optional `parent_id`.
-* **`vmfo/add-to-folder`** (write) – Adds one or more attachments to a folder using `folder_id` and `attachment_ids`.
-
-Recommended AI flow:
-
-1. Call `vmfo/list-folders` to resolve folder names/paths to a stable `id`.
-2. If needed, call `vmfo/create-folder` to create the target folder.
-3. Call `vmfo/add-to-folder` with that `folder_id` and one or more `attachment_ids`.
-
-This avoids ambiguity when duplicate folder names exist.
-
-Permission model:
-
-* `vmfo/list-folders` and `vmfo/add-to-folder` require the `upload_files` capability.
-* `vmfo/create-folder` requires the `manage_categories` capability.
-
-See the [MCP Integration guide](https://github.com/soderlind/vmfa-ai-ability/blob/main/docs/mcp.md) for client configuration (Claude, GitHub Copilot, Cursor) and a full usage walkthrough.
-
 = Documentation =
 
 * [Accessibility](https://github.com/soderlind/virtual-media-folders/blob/main/docs/a11y.md) – Keyboard navigation and screen reader support
