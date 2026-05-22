@@ -84,13 +84,13 @@ When inserting media from a block (Image, Gallery, etc.):
 
 Use the [**add-on manager**](https://github.com/soderlind/vmfa) to easily install and manage add-ons that extend Virtual Media Folders with powerful new features:
 
-* [Virtual Media Folders - AI Ability](https://github.com/soderlind/vmfa-ai-ability) – Registers MCP tools for AI agents via the WordPress Abilities API.
-* [Virtual Media Folders - AI Organizer](https://github.com/soderlind/vmfa-ai-organizer) – Uses vision-capable AI models to analyze actual image content and automatically organize your media library into virtual folders.
-* [Virtual Media Folders - Editorial Workflow](https://github.com/soderlind/vmfa-editorial-workflow) – Role-based folder access, move restrictions, and Inbox workflow.
-* [Virtual Media Folders - Folder Exporter](https://github.com/soderlind/vmfa-folder-exporter) – Export folders (or subtrees) as ZIP archives with optional CSV manifests.
-* [Virtual Media Folders - Media Cleanup](https://github.com/soderlind/vmfa-media-cleanup) – Tools to identify and clean up unused or duplicate media files.
-* [Virtual Media Folders - Migrate](https://github.com/soderlind/vmfa-migrate) – Migrate folder structures from other media folder plugins to Virtual Media Folders.
-* [Virtual Media Folders - Rules Engine](https://github.com/soderlind/vmfa-rules-engine) – Rule-based automatic folder assignment for media uploads, based on metadata, file type, EXIF or IPTC data.
+* [AI Ability](https://github.com/soderlind/vmfa-ai-ability) – Registers MCP tools for AI agents via the WordPress Abilities API.
+* [AI Organizer](https://github.com/soderlind/vmfa-ai-organizer) – Uses vision-capable AI models to analyze actual image content and automatically organize your media library into virtual folders.
+* [Editorial Workflow](https://github.com/soderlind/vmfa-editorial-workflow) – Role-based folder access, move restrictions, and Inbox workflow.
+* [Folder Exporter](https://github.com/soderlind/vmfa-folder-exporter) – Export folders (or subtrees) as ZIP archives with optional CSV manifests.
+* [Media Cleanup](https://github.com/soderlind/vmfa-media-cleanup) – Tools to identify and clean up unused or duplicate media files.
+* [Migrate](https://github.com/soderlind/vmfa-migrate) – Migrate folder structures from other media folder plugins to Virtual Media Folders.
+* [Rules Engine](https://github.com/soderlind/vmfa-rules-engine) – Rule-based automatic folder assignment for media uploads, based on metadata, file type, EXIF or IPTC data.
 
 == Installation ==
 
