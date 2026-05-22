@@ -80,17 +80,6 @@ When inserting media from a block (Image, Gallery, etc.):
 * [MCP Integration](https://github.com/soderlind/vmfa-ai-ability/blob/main/docs/mcp.md) – MCP client configuration, upload flow, and AI agent usage using the [AI Ability](https://github.com/soderlind/vmfa-ai-ability) add-on
 * [Add-on Development](https://github.com/soderlind/virtual-media-folders/blob/main/docs/addon-development.md) – Guide to building add-on plugins
 
-= Free add-ons =
-
-Use the [**add-on manager**](https://github.com/soderlind/vmfa) to easily install and manage add-ons that extend Virtual Media Folders with powerful new features:
-
-* [AI Ability](https://github.com/soderlind/vmfa-ai-ability) – Registers MCP tools for AI agents via the WordPress Abilities API.
-* [AI Organizer](https://github.com/soderlind/vmfa-ai-organizer) – Uses vision-capable AI models to analyze actual image content and automatically organize your media library into virtual folders.
-* [Editorial Workflow](https://github.com/soderlind/vmfa-editorial-workflow) – Role-based folder access, move restrictions, and Inbox workflow.
-* [Folder Exporter](https://github.com/soderlind/vmfa-folder-exporter) – Export folders (or subtrees) as ZIP archives with optional CSV manifests.
-* [Media Cleanup](https://github.com/soderlind/vmfa-media-cleanup) – Tools to identify and clean up unused or duplicate media files.
-* [Migrate](https://github.com/soderlind/vmfa-migrate) – Migrate folder structures from other media folder plugins to Virtual Media Folders.
-* [Rules Engine](https://github.com/soderlind/vmfa-rules-engine) – Rule-based automatic folder assignment for media uploads, based on metadata, file type, EXIF or IPTC data.
 
 == Installation ==
 
