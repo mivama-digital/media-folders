@@ -3,7 +3,7 @@ Contributors: PerS
 Tags: media, ai, organization, media library, folders
 Requires at least: 6.8
 Tested up to: 7.0
-Stable tag: 2.1.0
+Stable tag: 2.1.1
 Requires PHP: 8.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -129,6 +129,10 @@ If you are missing a feature and the [add-ons](https://github.com/soderlind/vmfa
 The [Migrate](https://github.com/soderlind/vmfa-migrate) add-on was created in response to a user request for migration from Enhanced Media Library, but it also supports FileBird, Real Media Library, HappyFiles, WP Media Folder, Media Library Assistant, and CatFolders.
 
 == Changelog ==
+
+= 2.1.1 =
+* Fixed: Gallery block edit modal now preserves selected images by skipping VMFO sidebar injection in the gallery-edit state.
+* Fixed: Image block media-library folder filtering no longer returns empty results for matching virtual folders.
 
 = 2.1.0 =
 * **BREAKING:** Abilities API integration extracted to separate add-on `vmfa-ai-ability`

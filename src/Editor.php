@@ -186,6 +186,8 @@ final class Editor {
 		if ( $folder_value !== null && is_numeric( $folder_value ) ) {
 			$folder_id = absint( $folder_value );
 			if ( $folder_id > 0 ) {
+				$query_args[ 'suppress_filters' ] = true;
+
 				if ( ! isset( $query_args[ 'tax_query' ] ) || ! is_array( $query_args[ 'tax_query' ] ) ) {
 					$query_args[ 'tax_query' ] = [];
 				}
@@ -223,6 +225,8 @@ final class Editor {
 			);
 
 			if ( ! is_wp_error( $all_folders ) && ! empty( $all_folders ) ) {
+				$query_args[ 'suppress_filters' ] = true;
+
 				if ( ! isset( $query_args[ 'tax_query' ] ) || ! is_array( $query_args[ 'tax_query' ] ) ) {
 					$query_args[ 'tax_query' ] = [];
 				}
