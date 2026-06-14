@@ -120,6 +120,7 @@ class EditorTest extends TestCase {
 		$this->assertSame( [ 5 ], $result[ 'tax_query' ][ 0 ][ 'terms' ] );
 		$this->assertSame( 'term_id', $result[ 'tax_query' ][ 0 ][ 'field' ] );
 		$this->assertFalse( $result[ 'tax_query' ][ 0 ][ 'include_children' ] );
+		$this->assertTrue( $result[ 'suppress_filters' ] );
 
 		unset( $_REQUEST[ 'query' ] );
 	}
@@ -162,6 +163,7 @@ class EditorTest extends TestCase {
 		$this->assertArrayHasKey( 'tax_query', $result );
 		$this->assertSame( 'NOT IN', $result[ 'tax_query' ][ 0 ][ 'operator' ] );
 		$this->assertSame( [ 1, 2, 3 ], $result[ 'tax_query' ][ 0 ][ 'terms' ] );
+		$this->assertTrue( $result[ 'suppress_filters' ] );
 
 		unset( $_REQUEST[ 'query' ] );
 	}
@@ -203,6 +205,7 @@ class EditorTest extends TestCase {
 
 		// Should not add tax_query if no folders exist
 		$this->assertArrayNotHasKey( 'tax_query', $result );
+		$this->assertArrayNotHasKey( 'suppress_filters', $result );
 
 		unset( $_REQUEST[ 'query' ] );
 	}
