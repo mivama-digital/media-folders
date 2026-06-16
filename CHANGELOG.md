@@ -5,6 +5,13 @@ All notable changes to Virtual Media Folders will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.2] - 2026-06-16
+
+### Changed
+
+- Renamed "Folder Settings" menu to "VMF Settings" for consistency.
+- Moved VMF Settings menu to bottom of Media submenu (position 900).
+
 ## [2.1.1] - 2026-06-14
 
 ### Fixed
