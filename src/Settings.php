@@ -76,10 +76,11 @@ final class Settings {
 		add_submenu_page(
 			'upload.php',
 			__( 'Virtual Media Folders Settings', 'virtual-media-folders' ),
-			__( 'Folder Settings', 'virtual-media-folders' ),
+			__( 'VMF Settings', 'virtual-media-folders' ),
 			'manage_options',
 			self::PAGE_SLUG,
-			[ self::class, 'render_settings_page' ]
+			[ self::class, 'render_settings_page' ],
+			900
 		);
 	}
 
