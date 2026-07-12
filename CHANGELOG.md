@@ -5,6 +5,16 @@ All notable changes to Virtual Media Folders will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.3] - 2026-07-12
+
+### Security
+
+- Resolved Dependabot alerts by updating build/test dependencies (`npm audit fix`, `@wordpress/scripts` 31 → 32). All production/runtime dependencies are clean; remaining alerts are dev-only transitive dependencies pinned by `@wordpress/scripts`.
+
+### Changed
+
+- Added grouped `.github/dependabot.yml` config (npm/composer/github-actions) to consolidate future dependency update PRs.
+
 ## [2.1.2] - 2026-06-16
 
 ### Changed
