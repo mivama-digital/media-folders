@@ -2,30 +2,38 @@
  * Editor styles for Virtual Media Folders Gutenberg integration.
  */
 
+/* The WP media grid's scroll box (.attachments, or .attachments-wrapper when
+   "load more" is active) is core-positioned as position:absolute; top:72px;
+   left:0; right:300px; bottom:0. We overlay the sidebar in that same
+   coordinate space (absolute against .attachments-browser) and shift the
+   scroll box's left edge by the sidebar width. --vmf-sidebar-w keeps the
+   sidebar width and the grid offset in sync. */
+.vmf-has-folder-sidebar {
+	--vmf-sidebar-w: 220px;
+}
+
 /* Folder sidebar in media modal */
 .vmf-editor-folder-sidebar {
 	position: absolute;
-	top: 0;
+	top: 72px;
 	left: 0;
-	width: 220px;
+	bottom: 0;
+	width: var(--vmf-sidebar-w);
 	border-right: 1px solid #dcdcde;
 	background: #f6f7f7;
 	overflow-y: auto;
 	overflow-x: hidden;
-	z-index: 10;
+	z-index: 1;
 	padding-top: 8px;
 	box-sizing: border-box;
 }
 
-/* When position is absolute, use full height of parent */
-.vmf-editor-folder-sidebar:not([style*="position: fixed"]) {
-	height: 100%;
-}
-
-/* Push attachments to make room for sidebar */
-.vmf-has-folder-sidebar .attachments-wrapper {
-	padding-left: 220px !important;
-	box-sizing: border-box !important;
+/* Push core's scroll box (both variants) and the inline uploader to start
+   after the sidebar. */
+.vmf-has-folder-sidebar .attachments,
+.vmf-has-folder-sidebar .attachments-wrapper,
+.vmf-has-folder-sidebar .uploader-inline {
+	left: var(--vmf-sidebar-w) !important;
 }
 
 .vmf-editor-folder-sidebar .vmf-folder-sidebar {
@@ -200,11 +208,6 @@
 	height: 16px;
 }
 
-/* Attachments scroll independently, sidebar stays fixed */
-.vmf-has-folder-sidebar .attachments {
-	left: 0 !important;
-}
-
 /* Loading state for smooth transitions */
 .vmf-has-folder-sidebar .attachments.vmf-loading {
 	opacity: 0.4;
@@ -235,13 +238,16 @@
 	height: 16px;
 }
 
-/* Responsive adjustments */
-@media screen and (max-width: 782px) {
+/* Match core's taller toolbar / grid offset at its breakpoints, and shrink
+   the sidebar on narrow modals (grid offset follows via --vmf-sidebar-w). */
+@media only screen and (max-width: 900px) {
 	.vmf-editor-folder-sidebar {
-		width: 160px;
+		top: 90px;
 	}
+}
 
-	.vmf-has-folder-sidebar .attachments-wrapper {
-		padding-left: 160px !important;
+@media screen and (max-width: 782px) {
+	.vmf-has-folder-sidebar {
+		--vmf-sidebar-w: 160px;
 	}
 }
