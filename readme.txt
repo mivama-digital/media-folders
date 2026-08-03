@@ -3,7 +3,7 @@ Contributors: PerS
 Tags: media, ai, organization, media library, folders
 Requires at least: 6.8
 Tested up to: 7.0
-Stable tag: 2.1.3
+Stable tag: 2.1.4
 Requires PHP: 8.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -129,6 +129,9 @@ If you are missing a feature and the [add-ons](https://github.com/soderlind/vmfa
 The [Migrate](https://github.com/soderlind/vmfa-migrate) add-on was created in response to a user request for migration from Enhanced Media Library, but it also supports FileBird, Real Media Library, HappyFiles, WP Media Folder, Media Library Assistant, and CatFolders.
 
 == Changelog ==
+
+= 2.1.4 =
+* Fixed: Folder sidebar layout in the block editor media modal on WordPress 7.1 (grid no longer overlaps the sidebar; works on 7.0–7.1).
 
 = 2.1.3 =
 * Security: Resolved Dependabot alerts by updating build/test dependencies (`npm audit fix`, `@wordpress/scripts` 31 → 32). All production/runtime dependencies are clean.

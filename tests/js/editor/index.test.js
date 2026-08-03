@@ -55,6 +55,7 @@ function createBrowser(stateId) {
 		},
 		$el: {
 			find,
+			prepend: vi.fn(),
 			addClass: vi.fn(),
 			removeClass: vi.fn(),
 		},
@@ -115,7 +116,7 @@ describe('Gutenberg editor integration', () => {
 
 		expect(result).toBe(browser);
 		expect(browser.$el.find).toHaveBeenCalledWith('.vmf-editor-folder-sidebar');
-		expect(browser.attachmentsWrapper.prepend).toHaveBeenCalledWith(expect.any(HTMLDivElement));
+		expect(browser.$el.prepend).toHaveBeenCalledWith(expect.any(HTMLDivElement));
 		expect(browser.$el.addClass).toHaveBeenCalledWith('vmf-has-folder-sidebar');
 		expect(createRoot).toHaveBeenCalledOnce();
 	});
