@@ -35,6 +35,7 @@ Virtual Media Folders brings virtual folder organization to your WordPress Media
 * [**Media Cleanup**](https://github.com/soderlind/vmfa-media-cleanup) – Tools to identify and clean up unused or duplicate media files.
 * [**Migrate**](https://github.com/soderlind/vmfa-migrate) – Migrate folder structures from other media folder plugins to Virtual Media Folders.
 * [**Rules Engine**](https://github.com/soderlind/vmfa-rules-engine) – Rule-based automatic folder assignment for media uploads, based on metadata, file type, EXIF or IPTC data. 
+* [**Search**](https://github.com/soderlind/vmfa-search) – Fast, typo-tolerant search for the WordPress Media Library, powered by the Loupe Search engine.
 
 https://www.youtube.com/watch?v=bA4lf7ynz24
 
