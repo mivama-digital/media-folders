@@ -8,6 +8,7 @@
 
 import { createRoot, createElement } from '@wordpress/element';
 import FolderSidebar from './components/FolderSidebar.jsx';
+import { registerFolderInserterCategories } from './inserter-media-categories';
 import './styles/editor.css';
 
 /**
@@ -104,6 +105,13 @@ if (document.readyState === 'loading') {
 	document.addEventListener('DOMContentLoaded', initGutenbergIntegration);
 } else {
 	initGutenbergIntegration();
+}
+
+// Register block-inserter Media tab categories (one per top-level folder).
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', registerFolderInserterCategories);
+} else {
+	registerFolderInserterCategories();
 }
 
 export { initGutenbergIntegration };

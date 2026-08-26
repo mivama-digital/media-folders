@@ -119,27 +119,72 @@ final class Editor {
 			]
 		);
 
-		$folder_list = [];
+		$image_counts = Settings::get( 'inserter_media_folders' ) ? self::get_folder_image_counts() : [];
+		$folder_list  = [];
 
 		if ( ! is_wp_error( $folders ) && is_array( $folders ) ) {
 			foreach ( $folders as $folder ) {
+				$order = get_term_meta( $folder->term_id, 'vmfo_order', true );
+
 				$folder_list[] = [
-					'id'     => $folder->term_id,
-					'name'   => $folder->name,
-					'slug'   => $folder->slug,
-					'parent' => $folder->parent,
-					'count'  => $folder->count,
+					'id'         => $folder->term_id,
+					'name'       => $folder->name,
+					'slug'       => $folder->slug,
+					'parent'     => $folder->parent,
+					'count'      => $folder->count,
+					'imageCount' => $image_counts[ $folder->term_id ] ?? 0,
+					'order'      => ( '' === $order ) ? null : (int) $order,
 				];
 			}
 		}
 
 		return [
-			'folders'           => $folder_list,
-			'restBase'          => 'vmfo-folders',
-			'nonce'             => wp_create_nonce( 'wp_rest' ),
-			'showAllMedia'      => (bool) Settings::get( 'show_all_media' ),
-			'showUncategorized' => (bool) Settings::get( 'show_uncategorized' ),
+			'folders'              => $folder_list,
+			'restBase'             => 'vmfo-folders',
+			'nonce'                => wp_create_nonce( 'wp_rest' ),
+			'showAllMedia'         => (bool) Settings::get( 'show_all_media' ),
+			'showUncategorized'    => (bool) Settings::get( 'show_uncategorized' ),
+			'inserterMediaFolders' => (bool) Settings::get( 'inserter_media_folders' ),
 		];
+	}
+
+	/**
+	 * Count image attachments directly assigned to each folder term.
+	 *
+	 * Used by the block inserter Media tab to register only folders whose
+	 * subtree contains at least one image (see inserter-media-categories.js).
+	 *
+	 * @return array<int, int> Image count keyed by term id.
+	 */
+	private static function get_folder_image_counts(): array {
+		global $wpdb;
+
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT tt.term_id AS term_id, COUNT( DISTINCT p.ID ) AS cnt
+				FROM {$wpdb->term_taxonomy} tt
+				INNER JOIN {$wpdb->term_relationships} tr ON tr.term_taxonomy_id = tt.term_taxonomy_id
+				INNER JOIN {$wpdb->posts} p ON p.ID = tr.object_id
+				WHERE tt.taxonomy = %s
+					AND p.post_type = 'attachment'
+					AND p.post_status = 'inherit'
+					AND p.post_mime_type LIKE %s
+				GROUP BY tt.term_id",
+				Taxonomy::TAXONOMY,
+				$wpdb->esc_like( 'image/' ) . '%'
+			),
+			ARRAY_A
+		);
+
+		$counts = [];
+
+		if ( is_array( $rows ) ) {
+			foreach ( $rows as $row ) {
+				$counts[ (int) $row['term_id'] ] = (int) $row['cnt'];
+			}
+		}
+
+		return $counts;
 	}
 
 	/**
