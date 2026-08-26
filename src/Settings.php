@@ -54,6 +54,7 @@ final class Settings {
 		'show_all_media'            => false,
 		'show_uncategorized'        => true,
 		'jump_to_folder_after_move' => false,
+		'inserter_media_folders'    => true,
 	];
 
 	/**
@@ -318,6 +319,18 @@ final class Settings {
 				'description' => __( 'Automatically switch to the target folder after moving files.', 'virtual-media-folders' ),
 			]
 		);
+
+		add_settings_field(
+			'inserter_media_folders',
+			__( 'Block Inserter Folders', 'virtual-media-folders' ),
+			[ self::class, 'render_checkbox_field' ],
+			self::PAGE_SLUG,
+			'vmfo_defaults',
+			[
+				'id'          => 'inserter_media_folders',
+				'description' => __( 'Show virtual folders as image sources in the block inserter\'s Media tab.', 'virtual-media-folders' ),
+			]
+		);
 	}
 
 	/**
@@ -338,6 +351,7 @@ final class Settings {
 			'show_all_media',
 			'show_uncategorized',
 			'jump_to_folder_after_move',
+			'inserter_media_folders',
 		];
 
 		foreach ( $boolean_fields as $field ) {
