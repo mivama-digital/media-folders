@@ -15,8 +15,8 @@ This file records the dependency baseline after the deterministic dependency mig
 
 ## Current graph
 
-- npm packages in lockfile: 1807
-- npm vulnerabilities: 33 total (0 critical, 11 high, 21 moderate, 1 low)
+- npm packages in lockfile: 1795
+- npm vulnerabilities: 32 total (0 critical, 10 high, 21 moderate, 1 low)
 - Composer advisories: 0
 
 ## Direct npm runtime dependencies
@@ -37,7 +37,7 @@ This file records the dependency baseline after the deterministic dependency mig
 - `@testing-library/react`: `^14.0.0`
 - `@testing-library/user-event`: `^14.6.1`
 - `@vitejs/plugin-react`: `^5.1.2`
-- `@wordpress/scripts`: `^32.6.0`
+- `@wordpress/scripts`: `^34.2.0`
 - `jsdom`: `^24.0.0`
 - `react`: `^18.3.1`
 - `react-dom`: `^18.3.1`
