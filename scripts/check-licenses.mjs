@@ -171,7 +171,6 @@ while (queue.length > 0) {
 	const childNames = new Set([
 		...Object.keys(packageJson.dependencies ?? {}),
 		...Object.keys(packageJson.optionalDependencies ?? {}),
-		...Object.keys(packageJson.peerDependencies ?? {}),
 	]);
 
 	for (const dependencyName of childNames) {
