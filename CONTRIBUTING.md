@@ -15,7 +15,7 @@ Direct feature development on `main` is discouraged.
 
 Requirements:
 
-- Node.js 20+
+- Node.js 24+
 - npm
 - PHP 8.3+
 - Composer 2
