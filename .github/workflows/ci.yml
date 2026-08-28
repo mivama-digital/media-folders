@@ -173,6 +173,11 @@ jobs:
       - name: Build and validate release archive
         run: npm run package:zip
 
+      - name: Generate and verify release checksums
+        run: |
+          sha256sum virtual-media-folders.zip npm-runtime.cdx.json composer-runtime.cdx.json > SHA256SUMS
+          sha256sum --check SHA256SUMS
+
       - name: Verify required distribution files
         run: |
           test -f virtual-media-folders.php
@@ -183,3 +188,4 @@ jobs:
           test -f npm-runtime.cdx.json
           test -f composer-runtime.cdx.json
           test -f virtual-media-folders.zip
+          test -f SHA256SUMS
