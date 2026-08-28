@@ -33,8 +33,9 @@ src/admin/
 src/editor/
 src/shared/
 
-# Tests and maintenance scripts
+# Tests, security metadata, and maintenance scripts
 tests/
+security/
 scripts/
 
 # Internal documentation and repository governance
