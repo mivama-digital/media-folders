@@ -21,10 +21,15 @@ const pinLatest = (groupName) => {
 pinLatest('dependencies');
 pinLatest('devDependencies');
 
-// The npm audit graph for @wordpress/scripts 32.x contains the remaining
-// high-severity paths. Upgrade this toolchain as one isolated compatibility
-// wave instead of using npm audit fix --force.
+// Upgrade security-sensitive toolchains in explicit compatibility waves.
 pkg.devDependencies['@wordpress/scripts'] = '^34.2.0';
+pkg.devDependencies['@testing-library/dom'] = '^10.4.1';
+pkg.devDependencies['@testing-library/jest-dom'] = '^7.0.1';
+pkg.devDependencies['@testing-library/react'] = '^16.3.2';
+pkg.devDependencies['@testing-library/user-event'] = '^14.6.6';
+pkg.devDependencies['@vitejs/plugin-react'] = '^6.1.0';
+pkg.devDependencies.jsdom = '^30.0.1';
+pkg.devDependencies.vitest = '^4.1.11';
 
 pkg.engines = {
   ...(pkg.engines || {}),
@@ -37,6 +42,7 @@ pkg.scripts = {
   ...pkg.scripts,
   'security:audit': 'npm audit',
   'security:audit:high': 'npm audit --audit-level=high',
+  'security:audit:runtime': 'npm audit --omit=dev --audit-level=high',
   'deps:outdated': 'npm outdated',
   'deps:tree': 'npm ls --all',
 };
