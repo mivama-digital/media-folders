@@ -1,4 +1,4 @@
-name: Toolchain lock refresh
+name: Toolchain migration validation
 
 on:
   push:
@@ -8,15 +8,20 @@ on:
       - '.github/workflows/toolchain-lock-refresh.yml'
       - 'package.json'
       - 'package-lock.json'
+      - 'webpack.config.js'
+      - 'scripts/check-engines.mjs'
+      - 'scripts/check-licenses.mjs'
+      - 'scripts/check-install-script-policy.mjs'
+      - 'security/npm-audit-baseline.json'
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   NODE_VERSION: '24'
 
 jobs:
-  refresh:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
@@ -30,18 +35,53 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
-      - name: Regenerate lockfile only
-        run: npm install --package-lock-only --ignore-scripts
+      - name: Install focused graph
+        run: npm ci
 
-      - name: Commit lockfile
+      - name: Summarize focused graph
         run: |
-          if git diff --quiet -- package-lock.json; then
-            echo 'package-lock.json is already current.'
-            exit 0
-          fi
+          node - <<'NODE'
+          const lock = require('./package-lock.json');
+          const packages = Object.entries(lock.packages || {}).filter(([path]) => path);
+          const installScripts = packages
+            .filter(([, entry]) => entry.hasInstallScript && entry.version)
+            .map(([path, entry]) => {
+              const marker = 'node_modules/';
+              const index = path.lastIndexOf(marker);
+              const name = index === -1 ? path : path.slice(index + marker.length);
+              return `${name}@${entry.version}`;
+            });
+          console.log(`locked packages: ${packages.length}`);
+          console.log(`install-script packages: ${[...new Set(installScripts)].sort().join(', ')}`);
+          NODE
 
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add package-lock.json
-          git commit -m 'build: regenerate focused toolchain lockfile'
-          git push origin HEAD:agent/toolchain-debt
+      - name: Check engine contract
+        run: npm run check:engines
+
+      - name: Inspect install-script policy
+        run: npm run security:install-scripts || true
+
+      - name: Inspect full audit
+        run: npm audit || true
+
+      - name: Inspect runtime license policy
+        run: npm run check:licenses || true
+
+      - name: Run JavaScript tests
+        run: npm test -- --run
+
+      - name: Build production assets
+        run: npm run build
+
+      - name: Show generated asset contract
+        run: |
+          find build -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
+          for asset in build/*.asset.php; do
+            echo "===== ${asset} ====="
+            cat "${asset}"
+          done
+
+      - name: Validate release invariants
+        run: |
+          npm run check:release-version
+          npm run check:bundle-budget
