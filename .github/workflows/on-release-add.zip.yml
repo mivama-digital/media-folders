@@ -66,7 +66,16 @@ jobs:
       - name: Build release archive
         run: npm run package:zip
 
-      - name: Attach ZIP and SBOMs to release
+      - name: Generate release checksums
+        run: |
+          sha256sum \
+            virtual-media-folders.zip \
+            virtual-media-folders-npm.cdx.json \
+            virtual-media-folders-composer.cdx.json \
+            > SHA256SUMS
+          sha256sum --check SHA256SUMS
+
+      - name: Attach ZIP, SBOMs and checksums to release
         uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -75,4 +84,5 @@ jobs:
             virtual-media-folders.zip
             virtual-media-folders-npm.cdx.json
             virtual-media-folders-composer.cdx.json
+            SHA256SUMS
           tag_name: ${{ github.event.release.tag_name }}
