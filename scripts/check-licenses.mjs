@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
 
 // Keep this list deliberately narrow. It mirrors the GPLv2-compatible license
 // families accepted by WordPress build tooling, but the check itself is local
@@ -112,7 +111,7 @@ function isCompatibleExpression(expression) {
 	return compatibleLicenses.has(normalized);
 }
 
-function readLicense(packageDirectory) {
+function readPackage(packageDirectory) {
 	const packageJsonPath = path.join(packageDirectory, 'package.json');
 	const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 	const rawLicense =
@@ -122,48 +121,80 @@ function readLicense(packageDirectory) {
 			: null);
 
 	return {
+		packageJson,
 		name: packageJson.name,
 		version: packageJson.version,
 		license: typeof rawLicense === 'object' ? rawLicense?.type ?? null : rawLicense,
 	};
 }
 
-const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-const projectRoot = fs.realpathSync(process.cwd());
-const productionTree = execFileSync(
-	npmCommand,
-	['ls', '--omit=dev', '--all', '--parseable', '--silent'],
-	{
-		encoding: 'utf8',
-		maxBuffer: 20 * 1024 * 1024,
-	}
-);
+function resolveInstalledPackage(dependencyName, fromDirectory) {
+	let current = fs.realpathSync(fromDirectory);
 
-const packageDirectories = [
-	...new Set(
-		productionTree
-			.split(/\r?\n/)
-			.map((line) => line.trim())
-			.filter(Boolean)
-			.map((directory) => fs.realpathSync(directory))
-			.filter((directory) => directory !== projectRoot)
-	),
-];
+	while (true) {
+		const candidate = path.join(current, 'node_modules', dependencyName);
+		const packageJsonPath = path.join(candidate, 'package.json');
+		if (fs.existsSync(packageJsonPath)) {
+			return fs.realpathSync(candidate);
+		}
+
+		const parent = path.dirname(current);
+		if (parent === current) {
+			return null;
+		}
+		current = parent;
+	}
+}
+
+const projectRoot = fs.realpathSync(process.cwd());
+const projectPackage = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+const queue = [];
+const visited = new Set();
+
+for (const dependencyName of Object.keys(projectPackage.dependencies ?? {})) {
+	const dependencyDirectory = resolveInstalledPackage(dependencyName, projectRoot);
+	if (!dependencyDirectory) {
+		console.error(`Unable to resolve runtime dependency: ${dependencyName}`);
+		process.exit(1);
+	}
+	queue.push(dependencyDirectory);
+}
+
+while (queue.length > 0) {
+	const packageDirectory = queue.shift();
+	if (visited.has(packageDirectory)) {
+		continue;
+	}
+	visited.add(packageDirectory);
+
+	const { packageJson } = readPackage(packageDirectory);
+	const childNames = new Set([
+		...Object.keys(packageJson.dependencies ?? {}),
+		...Object.keys(packageJson.optionalDependencies ?? {}),
+		...Object.keys(packageJson.peerDependencies ?? {}),
+	]);
+
+	for (const dependencyName of childNames) {
+		const dependencyDirectory = resolveInstalledPackage(dependencyName, packageDirectory);
+		if (dependencyDirectory && !visited.has(dependencyDirectory)) {
+			queue.push(dependencyDirectory);
+		}
+	}
+}
 
 const incompatible = [];
-for (const packageDirectory of packageDirectories) {
-	const dependency = readLicense(packageDirectory);
+for (const packageDirectory of visited) {
+	const dependency = readPackage(packageDirectory);
 	if (!dependency.license || !isCompatibleExpression(dependency.license)) {
 		incompatible.push({
-			...dependency,
+			name: dependency.name,
+			version: dependency.version,
 			license: dependency.license || 'missing',
 		});
 	}
 }
 
-console.log(
-	`GPLv2-compatible runtime license check: ${packageDirectories.length} packages inspected.`
-);
+console.log(`GPLv2-compatible runtime license check: ${visited.size} reachable packages inspected.`);
 
 if (incompatible.length > 0) {
 	console.error('Incompatible or unknown runtime dependency licenses:');
@@ -173,4 +204,4 @@ if (incompatible.length > 0) {
 	process.exit(1);
 }
 
-console.log('All runtime dependency licenses are GPLv2-compatible.');
+console.log('All reachable runtime dependency licenses are GPLv2-compatible.');
