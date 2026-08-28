@@ -347,12 +347,13 @@ The `i18n-map.json` file maps source files to their compiled outputs for proper 
 
 ## Creating a Distribution
 
-GitHub Releases are the canonical distribution path. The release workflow re-runs tests and security checks, validates that the release tag matches all plugin version metadata, enforces bundle budgets, installs production Composer dependencies, builds the ZIP, and attaches npm/Composer runtime SBOMs.
+GitHub Releases are the canonical distribution path. The release workflow re-runs tests and security checks, validates that the release tag matches all plugin version metadata, enforces bundle budgets, installs production Composer dependencies, generates runtime SBOMs, builds the canonical ZIP from `.distignore`, and publishes SHA-256 checksums for all release artifacts.
 
-For a local packaging smoke test, run the same validation gates first:
+For a local packaging smoke test, run the same validation gates and canonical packager:
 
 ```bash
 npm ci
+npm run security:install-scripts
 npm run security:audit:runtime
 npm test -- --run
 npm run build
@@ -363,9 +364,12 @@ composer install --prefer-dist --no-interaction --no-progress
 composer test
 composer audit --locked
 composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+npm run package:zip
 ```
 
-Do not treat a manually assembled ZIP as a release artifact. WordPress.org deployment is a separate, explicit manual workflow and must not be triggered merely by creating a Git tag.
+`npm run package:zip` verifies required runtime files, rejects known development-only paths, and tests the resulting archive before reporting success. Do not hand-maintain a second release exclusion list; `.distignore` is the canonical distribution policy for both the GitHub ZIP and WordPress.org trunk deployment.
+
+WordPress.org deployment is a separate, explicit manual workflow. It pins the existing `virtual-media-folders` SVN slug, derives the SVN version from the selected release tag, and defaults to dry-run mode. A Git tag alone never performs a WordPress.org commit.
 
 ## Contributing
 
