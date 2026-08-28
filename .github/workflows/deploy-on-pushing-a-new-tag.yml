@@ -7,8 +7,13 @@ on:
         description: Git tag to deploy, for example v2.1.6
         required: true
         type: string
+      dry_run:
+        description: Validate the WordPress.org SVN deployment without committing changes
+        required: true
+        default: true
+        type: boolean
       confirm:
-        description: Type DEPLOY to confirm WordPress.org deployment
+        description: Type DEPLOY to confirm the WordPress.org deployment workflow
         required: true
         type: string
 
@@ -35,7 +40,7 @@ jobs:
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
           version="${RELEASE_TAG#v}"
-          if [ -z "${version}" ] || [ "${version}" = "${RELEASE_TAG}" ] && [[ "${RELEASE_TAG}" != [0-9]* ]]; then
+          if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
             echo "Invalid release tag: ${RELEASE_TAG}" >&2
             exit 1
           fi
@@ -78,6 +83,8 @@ jobs:
 
       - name: Deploy to WordPress.org
         uses: 10up/action-wordpress-plugin-deploy@54bd289b8525fd23a5c365ec369185f2966529c2 # 2.3.0
+        with:
+          dry-run: ${{ inputs.dry_run }}
         env:
           SLUG: ${{ env.WPORG_SLUG }}
           VERSION: ${{ env.WPORG_VERSION }}
