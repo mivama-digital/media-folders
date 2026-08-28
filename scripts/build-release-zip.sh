@@ -32,6 +32,7 @@ for forbidden in \
 	.npmrc \
 	node_modules \
 	tests \
+	security \
 	scripts \
 	docs \
 	package.json \
