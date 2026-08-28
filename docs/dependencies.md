@@ -1,6 +1,6 @@
 # Dependency baseline
 
-This document records the dependency baseline and maintenance policy for `media-folders` after the standalone Mivama dependency migration.
+This document records the dependency baseline and maintenance policy for `media-folders` after the standalone Mivama dependency migration and the focused JavaScript toolchain cleanup.
 
 ## Runtime policy
 
@@ -15,14 +15,38 @@ This document records the dependency baseline and maintenance policy for `media-
 - Major dependency upgrades must be isolated from feature changes and validated through the full test/build pipeline.
 - WordPress.org deployment remains manual and must use a release tag whose version matches all plugin metadata.
 
+## Focused JavaScript toolchain
+
+The repository no longer depends on the `@wordpress/scripts` meta-package. The plugin only needs a subset of that stack, so the build is now explicit and intentionally small:
+
+- Webpack + webpack-cli for bundling and watch mode;
+- `@wordpress/babel-preset-default` + Babel loader for WordPress-compatible JavaScript transpilation;
+- `@wordpress/dependency-extraction-webpack-plugin` for WordPress externals and `*.asset.php` manifests;
+- `@wordpress/postcss-plugins-preset`, PostCSS, cssnano, and MiniCssExtractPlugin for CSS;
+- Sass Embedded + sass-loader for the repository's SCSS source;
+- rtlcss for generated `*-rtl.css` assets;
+- Terser for production JavaScript minimization;
+- Vitest/Vite/jsdom and Testing Library for JavaScript tests.
+
+`npm run start` is a Webpack watch build. The repository does not run a Webpack development server, so there is no reason to carry the dev-server/SockJS dependency chain.
+
+Removing the meta-package also removes tool families that this plugin does not use directly, including the WordPress E2E/Lighthouse/Puppeteer/OpenTelemetry stack, Markdown linting stack, generic Webpack dev server, and the copy-plugin chain.
+
+The focused graph preserves the existing plugin build contract: JavaScript bundles, CSS, RTL CSS, WordPress dependency extraction, and generated asset manifests.
+
 ## Current security baseline
 
-- npm packages in the lockfile: approximately 1,800 entries.
-- npm vulnerabilities in the full development graph: 32 total (`0 critical`, `10 high`, `21 moderate`, `1 low`).
-- npm vulnerabilities in the runtime graph (`--omit=dev`): 1 total (`0 critical`, `0 high`, `0 moderate`, `1 low`).
+On Node.js 24.19.0 / npm 11.17.0 CI:
+
+- `package-lock.json`: 687 non-root package entries, including platform-specific optional packages;
+- Linux `npm ci`: 610 packages installed / 611 packages audited including the project root;
+- full npm audit: 1 total (`0 critical`, `0 high`, `0 moderate`, `1 low`);
+- runtime audit gate: no High or Critical findings;
 - Composer advisories: `0`.
 
-The remaining high/moderate npm findings are inherited through the WordPress development/build toolchain rather than the distributed plugin runtime. They are not silently ignored: `security/npm-audit-baseline.json` records the reviewed advisory IDs, their maximum accepted severities, and the maximum aggregate counts.
+The previous WordPress meta-tooling baseline was 32 npm findings (`10 high`, `21 moderate`, `1 low`). The focused toolchain removes all High and Moderate findings from that graph.
+
+The remaining Low finding is `GHSA-g7r4-m6w7-qqqr` in `esbuild@0.27.3`, concerning the esbuild development server on Windows. This repository does not use the esbuild development server, but the finding remains visible and ratcheted in `security/npm-audit-baseline.json` until the validated Vite/Vitest dependency line resolves it.
 
 `npm run security:audit:dev-baseline` is a blocking gate. It fails when:
 
@@ -34,23 +58,18 @@ The remaining high/moderate npm findings are inherited through the WordPress dev
 
 That last rule makes the baseline ratcheting: once dependency debt is removed, the repository must record the improvement and may not silently reintroduce it later.
 
-A controlled `npm audit fix` test on 2026-08-28 found no non-breaking resolver changes for the remaining findings. Several forced suggestions would downgrade `@wordpress/scripts` to an obsolete incompatible line, so they are intentionally rejected. Fixes must come from compatible upstream dependency updates or a separately reviewed toolchain change.
-
 Runtime High/Critical findings and Composer advisories remain unconditional hard failures independent of the development baseline.
 
 ## Reviewed npm install scripts
 
-npm install-time lifecycle scripts are controlled through the project `allowScripts` policy and `.npmrc` enables `strict-allow-scripts=true`. Only the currently reviewed package versions are approved:
+npm install-time lifecycle scripts are controlled through the project `allowScripts` policy and `.npmrc` enables `strict-allow-scripts=true`. The focused graph currently requires exactly four reviewed lifecycle-script packages:
 
 - `@parcel/watcher@2.6.0`
 - `core-js@3.50.0`
-- `core-js-pure@3.48.0`
 - `esbuild@0.27.3`
-- `fsevents@2.3.2`
 - `fsevents@2.3.3`
-- `unrs-resolver@1.12.2`
 
-The two `fsevents` versions are macOS-only native filesystem watchers (`os: darwin`) present transitively in the locked toolchain. They are approved by exact version rather than by package name so a future native build change requires another review.
+`fsevents` is the macOS filesystem-watcher implementation. Approval is version-specific so a future native build change requires another review.
 
 A dependency update that introduces a new install script or changes one of these approved versions must be reviewed and explicitly re-approved. CI fails rather than silently broadening the policy.
 
@@ -66,28 +85,76 @@ A dependency update that introduces a new install script or changes one of these
 - `@wordpress/i18n`: `6.23.0`
 - `@wordpress/icons`: `15.1.0`
 
-## Direct npm development dependencies
+The WordPress JavaScript packages are externalized by the dependency-extraction plugin and represented by WordPress script handles in `build/*.asset.php`; they are not bundled as duplicate WordPress framework copies.
 
-- `@testing-library/dom`: `^10.4.1`
-- `@testing-library/jest-dom`: `^7.0.1`
-- `@testing-library/react`: `^16.3.2`
-- `@testing-library/user-event`: `^14.6.6`
-- `@vitejs/plugin-react`: `^5.1.4`
-- `@wordpress/scripts`: `^34.2.0`
-- `jsdom`: `^30.0.1`
-- `react`: `^18.3.1`
-- `react-dom`: `^18.3.1`
-- `vitest`: `^4.1.11`
+## Direct npm development dependency groups
 
-`@vitejs/plugin-react` intentionally remains on major 5 because major 6 requires Vite 8 and conflicts with the currently validated Vite/Vitest toolchain.
+### Build
+
+- `@babel/core`
+- `@wordpress/babel-preset-default`
+- `@wordpress/browserslist-config`
+- `@wordpress/dependency-extraction-webpack-plugin`
+- `@wordpress/postcss-plugins-preset`
+- `babel-loader`
+- `browserslist`
+- `css-loader`
+- `cssnano`
+- `mini-css-extract-plugin`
+- `postcss`
+- `postcss-loader`
+- `rtlcss`
+- `sass-embedded`
+- `sass-loader`
+- `terser-webpack-plugin`
+- `webpack`
+- `webpack-cli`
+
+### Test
+
+- `@testing-library/dom`
+- `@testing-library/jest-dom`
+- `@testing-library/react`
+- `@testing-library/user-event`
+- `@vitejs/plugin-react`
+- `jsdom`
+- `react`
+- `react-dom`
+- `vitest`
+
+React remains a development/test dependency because the plugin build externalizes the WordPress/React runtime instead of shipping a private React copy.
 
 ## License policy
 
 The repository and plugin are `GPL-2.0-or-later`. `package.json` records that license explicitly.
 
-`npm run check:licenses` executes the WordPress Scripts production-dependency GPLv2 compatibility check. It is blocking in pull-request CI, distributable-build validation, GitHub release validation, and WordPress.org deployment validation.
+`npm run check:licenses` starts from the project's direct `dependencies` and walks their installed `dependencies` and `optionalDependencies`. It intentionally does not treat development dependencies or external peer contracts as plugin runtime dependencies. Every reachable package must use a license accepted by the repository's GPLv2-compatible allowlist.
+
+This distinction is important for the focused build stack: Sass, Vite, Webpack, and their build-only transitive packages are development tooling and are not mislabeled as distributed plugin runtime dependencies.
 
 New runtime dependencies must therefore be both technically justified and license-compatible with the plugin distribution.
+
+## Build-contract validation
+
+The focused toolchain has been compared against the previous production build. It preserves the WordPress dependency handles in the primary asset manifests. For example, `build/admin.asset.php` continues to declare:
+
+- `react`
+- `react-dom`
+- `react-jsx-runtime`
+- `wp-api-fetch`
+- `wp-components`
+- `wp-element`
+- `wp-i18n`
+- `wp-primitives`
+
+Current primary JavaScript sizes are:
+
+- `build/admin.js`: 90,629 bytes;
+- `build/editor.js`: 13,894 bytes;
+- `build/shared.js`: 15,990 bytes;
+- primary total: 120,513 bytes.
+
+All remain below the repository's existing bundle budgets. Generated CSS, RTL CSS, and `*.asset.php` files are committed together with the toolchain change so source and distributable assets stay synchronized.
 
 ## CI and release gates
 
@@ -98,7 +165,7 @@ The permanent pipeline validates:
 - exact reviewed install-script coverage;
 - runtime npm security audit as a hard gate;
 - the ratcheting full-development npm advisory baseline as a hard gate;
-- GPLv2-compatible production npm dependency licenses;
+- GPL-compatible reachable production npm dependency licenses;
 - JavaScript tests and production build;
 - PHP tests and `composer audit --locked`;
 - consistency between `package.json`, the WordPress plugin header, `readme.txt`, and release tags;
