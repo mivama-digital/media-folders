@@ -15,6 +15,7 @@
 		"security:audit": "npm audit",
 		"security:audit:high": "npm audit --audit-level=high",
 		"security:audit:runtime": "npm audit --omit=dev --audit-level=high",
+		"security:audit:dev-baseline": "node scripts/check-dev-audit-baseline.mjs",
 		"security:install-scripts": "node scripts/check-install-script-policy.mjs",
 		"check:bundle-budget": "node scripts/check-bundle-budget.mjs",
 		"check:release-version": "node scripts/check-release-version.mjs",
