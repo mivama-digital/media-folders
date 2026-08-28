@@ -19,6 +19,7 @@
 		"check:bundle-budget": "node scripts/check-bundle-budget.mjs",
 		"check:release-version": "node scripts/check-release-version.mjs",
 		"sbom:npm": "npm sbom --omit=dev --sbom-format=cyclonedx --sbom-type=application",
+		"sbom:composer": "node scripts/generate-composer-sbom.mjs",
 		"deps:outdated": "npm outdated",
 		"deps:tree": "npm ls --all"
 	},
