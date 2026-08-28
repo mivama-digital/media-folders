@@ -31,7 +31,11 @@ npm install-time lifecycle scripts are controlled through the project `allowScri
 - `core-js@3.50.0`
 - `core-js-pure@3.48.0`
 - `esbuild@0.27.3`
+- `fsevents@2.3.2`
+- `fsevents@2.3.3`
 - `unrs-resolver@1.12.2`
+
+The two `fsevents` versions are macOS-only native filesystem watchers (`os: darwin`) present transitively in the locked toolchain. They are approved by exact version rather than by package name so a future native build change requires another review.
 
 A dependency update that introduces a new install script or changes one of these approved versions must be reviewed and explicitly re-approved. CI should fail rather than silently broadening the policy.
 
@@ -75,9 +79,13 @@ The permanent pipeline validates:
 - bundle-size budgets for primary JavaScript bundles;
 - distributable plugin files;
 - npm and Composer runtime SBOM generation;
-- pull-request dependency review for new high-severity dependency changes.
+- pull-request dependency review for new high-severity dependency changes once GitHub Dependency Graph is enabled for the repository.
 
 GitHub Actions and WordPress.org deployment actions are pinned to immutable commit SHAs. Dependabot groups minor/patch updates by compatibility domain; major upgrades remain isolated instead of being bundled into routine update PRs.
+
+## Repository security prerequisite
+
+GitHub Dependency Review requires the repository Dependency Graph. If that repository-level setting is disabled, the Dependency Review action cannot evaluate a pull request. Enable **Settings → Security / Code security → Dependency graph** before making the Dependency Review job a required merge gate.
 
 ## Maintenance commands
 
