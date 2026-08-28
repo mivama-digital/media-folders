@@ -10,6 +10,7 @@
 # Development files
 .phpunit.cache
 .editorconfig
+.npmrc
 .DS_Store
 
 # Build tools and configs
@@ -29,15 +30,18 @@ src/admin/
 src/editor/
 src/shared/
 
-# Tests
+# Tests and maintenance scripts
 tests/
 scripts/
 
-# Documentation
-docs/
+# Internal documentation and repository governance
 assets/
+docs/
 README.md
 CHANGELOG.md
+CONTRIBUTING.md
+SECURITY.md
+UPSTREAM.md
 
 # Composer dev dependencies
 vendor/phpunit/
