@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: "\U0001F512 Report a Security Vulnerability"
-    url: https://github.com/soderlind/virtual-media-folders/security/advisories/new
-    about: Report a security vulnerability privately via GitHub Security Advisories.
+  - name: "Report a Security Vulnerability"
+    url: https://github.com/mivama-digital/media-folders/security/advisories/new
+    about: Report security vulnerabilities privately via GitHub Security Advisories.
+  - name: "Upstream Project"
+    url: https://github.com/soderlind/virtual-media-folders
+    about: View the original Virtual Media Folders project and upstream history.

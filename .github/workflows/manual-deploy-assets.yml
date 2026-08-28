@@ -1,19 +1,25 @@
-name: Manual plugin asset/readme update
+name: Update WordPress.org assets (manual)
 
 on:
   workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type DEPLOY to confirm the WordPress.org asset/readme update
+        required: true
+        type: string
+
+permissions:
+  contents: read
 
 jobs:
-  trunk:
-    name: Push to trunk
+  update:
+    if: ${{ inputs.confirm == 'DEPLOY' }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: WordPress.org plugin asset/readme update
+      - name: Update WordPress.org plugin assets and readme
         uses: 10up/action-wordpress-plugin-asset-update@stable
         env:
           IGNORE_OTHER_FILES: true

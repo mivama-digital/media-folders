@@ -1,41 +1,20 @@
 # Virtual Media Folders
 
-Virtual folder organization for the WordPress Media Library.
+Virtual folder organization for the WordPress Media Library without moving files on disk or changing media URLs.
 
-[![Try in WordPress Playground](https://img.shields.io/badge/▶_Try_in_WordPress_Playground-blue?style=for-the-badge)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/soderlind/virtual-media-folders/refs/heads/main/.wordpress-org/blueprints/blueprint.json)
+This repository is the **Mivama Digital maintained distribution** of Virtual Media Folders. It is based on the original [`soderlind/virtual-media-folders`](https://github.com/soderlind/virtual-media-folders) project created by Per Søderlind. Original authorship, copyright notices, Git history, and GPL licensing are intentionally preserved.
 
->Way back in 2006 (20 years ago!), I released [ImageManager 2.0](assets/imagemnager-2006.md), a popular WordPress plugin for image management and editing. Virtual Media Folders is my modern take on media organization for WordPress, built with React and modern tooling.
+> **Maintenance model:** Mivama maintains its own roadmap, releases, CI, support process, and repository governance. Relevant upstream changes may be reviewed and adopted deliberately; upstream is not merged automatically.
 
-## Description
+## Features
 
-Virtual Media Folders brings folder organization to your WordPress Media Library. Organize your media files into hierarchical folders **without moving files on disk**—folders are virtual, so your URLs never change.
-
-[![Screenshot of Virtual Media Folders](assets/virtual-media-folders.png)](https://www.youtube.com/watch?v=bA4lf7ynz24)
-*Click to watch demo video on YouTube*
-
-### Features
-
-- **Virtual Folders** – Create hierarchical folder structures to organize media
-- **Drag & Drop** – Move media between folders with drag and drop
-- **Sticky Sidebar** – Folder navigation stays visible while scrolling
-- **Gutenberg Integration** – Filter media by folder in the block editor
-- **Bulk Actions** – Move multiple media items at once
-- **Keyboard Accessible** – Full keyboard navigation with screen reader support
-- **Internationalized** – Translation ready (Norwegian Bokmål included)
-
-### Free add-ons
-Use the [**add-on manager**](https://github.com/soderlind/vmfa) to install and manage add-ons that extend Virtual Media Folders from a dedicated admin screen:
-
-- [**AI Ability**](https://github.com/soderlind/vmfa-ai-ability) – Registers MCP tools for AI agents via the WordPress Abilities API.
-- [**AI Organizer**](https://github.com/soderlind/vmfa-ai-organizer) – Uses vision-capable AI models to analyze actual image content and automatically organize your media library into virtual folders. This is add-on functionality requiring an API key from a supported AI service provider.
-- [**Editorial Workflow**](https://github.com/soderlind/vmfa-editorial-workflow) – Role-based folder access, move restrictions, and Inbox workflow.
-- [**Folder Exporter**](https://github.com/soderlind/vmfa-folder-exporter) – Export folders (or subtrees) as ZIP archives with optional CSV manifests.
-- [**Media Cleanup**](https://github.com/soderlind/vmfa-media-cleanup) – Detect unused, duplicate, and oversized media — then archive, trash, or flag for review.
-- [**Migrate**](https://github.com/soderlind/vmfa-migrate) – Migrate folder structures from other media folder plugins to Virtual Media Folders.
-- [**Rules Engine**](https://github.com/soderlind/vmfa-rules-engine) – Rule-based automatic folder assignment for media uploads, based on metadata, file type, EXIF or IPTC data.
-- [**Search**](https://github.com/soderlind/vmfa-search) – Fast, typo-tolerant search for the WordPress Media Library, powered by the Loupe Search engine.
-
-
+- Hierarchical virtual folders for the WordPress Media Library
+- Drag-and-drop organization without filesystem moves
+- Media Library and block editor integration
+- Bulk move actions
+- Keyboard and screen-reader accessibility support
+- Translation-ready UI
+- Extensible taxonomy, REST, and add-on APIs
 
 ## Requirements
 
@@ -44,117 +23,87 @@ Use the [**add-on manager**](https://github.com/soderlind/vmfa) to install and m
 
 ## Installation
 
-### From GitHub
+### Mivama release
 
-1. Download [\`virtual-media-folders.zip\`](https://github.com/soderlind/virtual-media-folders/releases/latest/download/virtual-media-folders.zip)
-2. Go to **Plugins > Add New > Upload Plugin**
-3. Upload the zip file and activate
+1. Open the [Mivama releases](https://github.com/mivama-digital/media-folders/releases) page.
+2. Download the `virtual-media-folders.zip` asset from the desired release.
+3. In WordPress, go to **Plugins > Add New > Upload Plugin**.
+4. Upload the ZIP and activate the plugin.
 
-### From [WordPress.org](https://wordpress.org/plugins/virtual-media-folders/)
-
-1. Go to **Plugins > Add New**
-2. Search for "Virtual Media Folders"
-3. Click **Install Now** and **Activate**
+The original project is also published at [WordPress.org](https://wordpress.org/plugins/virtual-media-folders/). The Mivama repository does not treat that listing as its deployment target unless WordPress.org release ownership and credentials are explicitly configured for Mivama.
 
 ## Usage
 
-### Organizing Media
+### Organize media
 
-1. Go to **Media > Library**
-2. Click the folder icon to show the sidebar
-3. Use **+** to create folders
-4. Drag media onto folders to organize / Bulk select media and use the "Move to Folder" action
-5. Click a folder to filter the view
+1. Go to **Media > Library**.
+2. Open the folder sidebar.
+3. Create folders with **+**.
+4. Drag media into folders or use the bulk **Move to Folder** action.
+5. Select a folder to filter the media view.
 
 ### Settings
 
-Go to **Media > Folder Settings** to configure:
+Go to **Media > Folder Settings** to configure sidebar visibility, uncategorized media, move behavior, and the default upload folder.
 
-| Setting | Description |
-|---------|-------------|
-| Show "All Media" | Display "All Media" option in sidebar |
-| Show "Uncategorized" | Display folder for unassigned media |
-| Jump to folder after move | Navigate to target folder after moving |
-| Default folder for uploads | Auto-assign new uploads to a folder |
+## Development
 
-### Block Editor
-
-When inserting media from a block:
-
-1. Open the Media Library modal
-2. Use the folder sidebar to filter
-3. Select your media
-
-### AI Abilities
-
-With the [AI Ability add-on](https://github.com/soderlind/vmfa-ai-ability) installed, the following Abilities API tools are available for AI agents and MCP adapters:
-
-- **`vmfo/list-folders`** (read-only): Lists folders with `id`, `name`, `parent_id`, `path`, and `count`.
-- **`vmfo/create-folder`** (write): Creates a folder with `name` and optional `parent_id`.
-- **`vmfo/add-to-folder`** (write): Adds one or more attachments to a folder using `folder_id` and `attachment_ids`.
-
-Recommended flow for AI clients:
-
-1. Call `vmfo/list-folders` to resolve folder names and paths to a stable `id`.
-2. If needed, call `vmfo/create-folder` to create the target folder.
-3. Call `vmfo/add-to-folder` with that `folder_id` and one or more `attachment_ids`.
-
-This avoids ambiguity when folder names are duplicated under different parents.
-
-Permission model:
-
-- `vmfo/list-folders` and `vmfo/add-to-folder` require the `upload_files` capability.
-- `vmfo/create-folder` requires the `manage_categories` capability.
-
-WordPress MCP adapter (default server) example:
+Install dependencies:
 
 ```bash
-# Endpoint:
-# /wp-json/mcp/mcp-adapter-default-server
-
-# List tools
-curl -X POST "https://example.com/wp-json/mcp/mcp-adapter-default-server" \
-	-u "username:application-password" \
-	-H "Content-Type: application/json" \
-	-d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
-
-# Resolve folder id via gateway
-curl -X POST "https://example.com/wp-json/mcp/mcp-adapter-default-server" \
-	-u "username:application-password" \
-	-H "Content-Type: application/json" \
-	-d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"mcp-adapter-execute-ability","arguments":{"ability_name":"vmfo/list-folders","parameters":{"search":"travel","hide_empty":false}}}}'
-
-# Add attachments to folder via gateway
-curl -X POST "https://example.com/wp-json/mcp/mcp-adapter-default-server" \
-	-u "username:application-password" \
-	-H "Content-Type: application/json" \
-	-d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"mcp-adapter-execute-ability","arguments":{"ability_name":"vmfo/add-to-folder","parameters":{"folder_id":2285,"attachment_ids":[101,205,309]}}}}'
-
-# Create folder via gateway
-curl -X POST "https://example.com/wp-json/mcp/mcp-adapter-default-server" \
-	-u "username:application-password" \
-	-H "Content-Type: application/json" \
-	-d '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"mcp-adapter-execute-ability","arguments":{"ability_name":"vmfo/create-folder","parameters":{"name":"Travel","parent_id":0}}}}'
+npm ci
+composer install
 ```
 
-[Smoke test](./scripts/mcp-adapter-smoke-test.sh):
+Run the JavaScript test suite:
 
 ```bash
-MCP_BASE_URL="https://example.com/wp-json/mcp/mcp-adapter-default-server" \
-MCP_USER="per" \
-MCP_APP_PASS="xxxx xxxx xxxx xxxx xxxx xxxx" \
-./scripts/mcp-adapter-smoke-test.sh
+npm test -- --run
 ```
+
+Run the PHP test suite:
+
+```bash
+composer test
+```
+
+Build production assets:
+
+```bash
+npm run build
+```
+
+Pull requests should pass the repository CI before merge. See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow.
+
+## Versioning and releases
+
+Mivama **continues the existing plugin version lineage** instead of resetting the plugin to `1.0.0`. Resetting the version would create incorrect downgrade/update semantics for installations already using the `virtual-media-folders` plugin slug.
+
+Release policy:
+
+- semantic versions use `vX.Y.Z` Git tags;
+- GitHub releases produce `virtual-media-folders.zip`;
+- release builds must pass JavaScript tests, PHP tests, and the production build;
+- WordPress.org deployment is a separate, explicit operation and is not triggered by every Git tag.
 
 ## Documentation
 
-- [Accessibility](docs/a11y.md) – Keyboard navigation and screen reader support
-- [Development](docs/development.md) – Setup, API reference, hooks, and contributing
-- [Add-on Development](docs/addon-development.md) – Guide to building add-on plugins
-- [MCP Integration](docs/mcp.md) – Upload, find/create folder, and assign media via MCP
+- [Documentation index](docs/README.md)
+- [Accessibility](docs/a11y.md)
+- [Development](docs/development.md)
+- [Hooks](docs/hooks.md)
+- [Add-on development](docs/addon-development.md)
+- [Upstream relationship](UPSTREAM.md)
+- [Security policy](SECURITY.md)
+
+## Upstream and attribution
+
+Virtual Media Folders was created by **Per Søderlind**. Mivama's repository preserves that origin rather than relying on GitHub's `forked from ...` banner as the only attribution mechanism.
+
+For the maintenance policy, synchronization rules, and attribution details, see [UPSTREAM.md](UPSTREAM.md).
 
 ## License
 
-Virtual Media Folders is free software licensed under the [GPL v2 or later](https://www.gnu.org/licenses/gpl-2.0.html).
+Licensed under **GPL-2.0-or-later**. See [LICENSE](LICENSE) for the repository license notice.
 
-Copyright 2025 Per Soderlind
+Original Virtual Media Folders copyright remains with its respective author(s). Subsequent Mivama changes remain subject to the same GPL-compatible licensing requirements.

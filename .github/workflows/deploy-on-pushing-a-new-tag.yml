@@ -1,23 +1,58 @@
-name: Deploy to WordPress.org
+name: Deploy to WordPress.org (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Git tag to deploy, for example v2.1.6
+        required: true
+        type: string
+      confirm:
+        description: Type DEPLOY to confirm WordPress.org deployment
+        required: true
+        type: string
+
 permissions:
   contents: read
 
-on:
-  push:
-    tags:
-      - '*'
-
 jobs:
   deploy:
+    if: ${{ inputs.confirm == 'DEPLOY' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout release tag
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
 
-      - name: Build plugin
-        run: composer install --no-dev
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
 
-      - name: WordPress.org Plugin Deploy
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: composer:v2
+
+      - name: Validate JavaScript and build assets
+        run: |
+          npm ci
+          npm test -- --run
+          npm run build
+
+      - name: Validate PHP
+        run: |
+          composer install --prefer-dist --no-interaction --no-progress
+          composer test
+
+      - name: Install production PHP dependencies
+        run: composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+
+      - name: Deploy to WordPress.org
         uses: 10up/action-wordpress-plugin-deploy@stable
         env:
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
