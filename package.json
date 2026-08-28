@@ -50,6 +50,8 @@
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
 		"rtlcss": "^4.3.0",
+		"sass-embedded": "^1.103.1",
+		"sass-loader": "^17.0.0",
 		"terser-webpack-plugin": "^5.3.10",
 		"vitest": "^4.1.11",
 		"webpack": "^5.108.1",
@@ -67,13 +69,9 @@
 		"@wordpress/icons": "15.1.0"
 	},
 	"allowScripts": {
-		"@parcel/watcher@2.6.0": true,
 		"core-js@3.50.0": true,
-		"core-js-pure@3.48.0": true,
 		"esbuild@0.27.3": true,
-		"fsevents@2.3.2": true,
-		"fsevents@2.3.3": true,
-		"unrs-resolver@1.12.2": true
+		"fsevents@2.3.3": true
 	},
 	"browserslist": [
 		"extends @wordpress/browserslist-config"
