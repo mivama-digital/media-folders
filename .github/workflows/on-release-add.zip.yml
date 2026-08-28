@@ -55,8 +55,8 @@ jobs:
 
       - name: Generate runtime SBOMs
         run: |
-          npm run sbom:npm > virtual-media-folders-npm.cdx.json
-          npm run sbom:composer > virtual-media-folders-composer.cdx.json
+          npm run --silent sbom:npm > virtual-media-folders-npm.cdx.json
+          npm run --silent sbom:composer > virtual-media-folders-composer.cdx.json
           node -e "JSON.parse(require('fs').readFileSync('virtual-media-folders-npm.cdx.json', 'utf8'))"
           node -e "JSON.parse(require('fs').readFileSync('virtual-media-folders-composer.cdx.json', 'utf8'))"
 
