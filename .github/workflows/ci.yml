@@ -170,6 +170,9 @@ jobs:
       - name: Audit locked Composer dependencies
         run: composer audit --locked
 
+      - name: Build and validate release archive
+        run: npm run package:zip
+
       - name: Verify required distribution files
         run: |
           test -f virtual-media-folders.php
@@ -179,3 +182,4 @@ jobs:
           test -f build/admin.js
           test -f npm-runtime.cdx.json
           test -f composer-runtime.cdx.json
+          test -f virtual-media-folders.zip
