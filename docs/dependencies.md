@@ -26,7 +26,7 @@ The full npm graph includes WordPress build/test tooling. Release risk is gated 
 
 - `@dnd-kit/core`: `^6.3.1`
 - `@dnd-kit/modifiers`: `^9.0.0`
-- `@dnd-kit/sortable`: `^7.0.0`
+- `@dnd-kit/sortable`: `^10.0.0`
 - `@wordpress/api-fetch`: `7.41.0`
 - `@wordpress/components`: `36.1.0`
 - `@wordpress/data`: `10.50.0`
