@@ -21,6 +21,11 @@ const pinLatest = (groupName) => {
 pinLatest('dependencies');
 pinLatest('devDependencies');
 
+// The npm audit graph for @wordpress/scripts 32.x contains the remaining
+// high-severity paths. Upgrade this toolchain as one isolated compatibility
+// wave instead of using npm audit fix --force.
+pkg.devDependencies['@wordpress/scripts'] = '^34.2.0';
+
 pkg.engines = {
   ...(pkg.engines || {}),
   node: '>=24 <25',
