@@ -14,11 +14,16 @@
 		"i18n:make-php": "wp i18n make-php languages/",
 		"security:audit": "npm audit",
 		"security:audit:high": "npm audit --audit-level=high",
+		"security:audit:runtime": "npm audit --omit=dev --audit-level=high",
+		"security:install-scripts": "npm install-scripts ls",
+		"check:bundle-budget": "node scripts/check-bundle-budget.mjs",
+		"check:release-version": "node scripts/check-release-version.mjs",
+		"sbom:npm": "npm sbom --omit=dev --sbom-format=cyclonedx --sbom-type=application",
 		"deps:outdated": "npm outdated",
-		"deps:tree": "npm ls --all",
-		"security:audit:runtime": "npm audit --omit=dev --audit-level=high"
+		"deps:tree": "npm ls --all"
 	},
 	"devDependencies": {
+		"@testing-library/dom": "^10.4.1",
 		"@testing-library/jest-dom": "^7.0.1",
 		"@testing-library/react": "^16.3.2",
 		"@testing-library/user-event": "^14.6.6",
@@ -27,8 +32,7 @@
 		"jsdom": "^30.0.1",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
-		"vitest": "^4.1.11",
-		"@testing-library/dom": "^10.4.1"
+		"vitest": "^4.1.11"
 	},
 	"dependencies": {
 		"@dnd-kit/core": "^6.3.1",
@@ -40,6 +44,13 @@
 		"@wordpress/element": "8.2.0",
 		"@wordpress/i18n": "6.23.0",
 		"@wordpress/icons": "15.1.0"
+	},
+	"allowScripts": {
+		"@parcel/watcher@2.6.0": true,
+		"core-js@3.50.0": true,
+		"core-js-pure@3.48.0": true,
+		"esbuild@0.27.3": true,
+		"unrs-resolver@1.12.2": true
 	},
 	"engines": {
 		"node": ">=24 <25",
