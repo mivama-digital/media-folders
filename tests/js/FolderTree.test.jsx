@@ -91,12 +91,15 @@ describe('FolderTree', () => {
 			render(<FolderTree onFolderSelect={() => {}} />);
 		});
 
+		// All Media/Uncategorized can render as soon as loading ends, one effect
+		// before FolderTree's local folder state has synchronized with fetchedFolders.
+		// Wait for an API-backed folder so this assertion cannot race that sync.
 		await waitFor(() => {
-			expect(screen.getByText('All Media')).toBeInTheDocument();
+			expect(screen.getByText('Images')).toBeInTheDocument();
 		});
 
+		expect(screen.getByText('All Media')).toBeInTheDocument();
 		expect(screen.getByText('Uncategorized')).toBeInTheDocument();
-		expect(screen.getByText('Images')).toBeInTheDocument();
 		expect(screen.getByText('Documents')).toBeInTheDocument();
 	});
 
