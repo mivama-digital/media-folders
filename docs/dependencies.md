@@ -77,11 +77,19 @@ The permanent pipeline validates:
 - PHP tests and `composer audit --locked`;
 - consistency between `package.json`, the WordPress plugin header, `readme.txt`, and release tags;
 - bundle-size budgets for primary JavaScript bundles;
-- distributable plugin files;
-- npm and Composer runtime SBOM generation;
+- distributable plugin files and the actual `virtual-media-folders.zip` archive;
+- one canonical `.distignore` policy for GitHub release packaging and WordPress.org trunk deployment;
+- npm and Composer runtime CycloneDX SBOM generation;
+- SHA-256 checksums for the ZIP and both SBOMs;
 - pull-request dependency review for new high-severity dependency changes once GitHub Dependency Graph is enabled for the repository.
 
 GitHub Actions and WordPress.org deployment actions are pinned to immutable commit SHAs. Dependabot groups minor/patch updates by compatibility domain; major upgrades remain isolated instead of being bundled into routine update PRs.
+
+## WordPress.org deployment contract
+
+The GitHub repository is named `media-folders`, while the existing WordPress.org/plugin slug is `virtual-media-folders`. Deployment workflows therefore set the WordPress.org slug explicitly and never derive it from the repository name.
+
+The manual plugin deployment workflow also resolves the SVN version from the selected release tag, validates SemVer, verifies the tag against plugin metadata, and defaults to the 10up action's dry-run mode. A real SVN commit remains an explicit manual choice and requires authorized Mivama-owned WordPress.org credentials.
 
 ## Repository security prerequisite
 
@@ -100,6 +108,8 @@ npm run check:release-version
 npm run check:bundle-budget
 npm run sbom:npm
 npm run sbom:composer
+composer install --no-dev --prefer-dist --optimize-autoloader
+npm run package:zip
 npm run deps:outdated
 npm run deps:tree
 composer validate --strict
