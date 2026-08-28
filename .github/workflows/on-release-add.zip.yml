@@ -7,39 +7,58 @@ on:
 permissions:
   contents: write
 
+env:
+  NODE_VERSION: '24'
+  PHP_VERSION: '8.3'
+
 jobs:
   build:
     name: Validate and build release ZIP
     runs-on: ubuntu-latest
     steps:
       - name: Checkout release tag
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.release.tag_name }}
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
-          php-version: '8.3'
+          php-version: ${{ env.PHP_VERSION }}
           coverage: none
           tools: composer:v2
 
-      - name: Test and build JavaScript
+      - name: Test, audit and build JavaScript
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           npm ci
+          npm run security:install-scripts
+          npm run security:audit:runtime
           npm test -- --run
           npm run build
+          npm run check:release-version
+          npm run check:bundle-budget
 
-      - name: Test PHP
+      - name: Test and audit PHP
         run: |
+          composer validate --strict
           composer install --prefer-dist --no-interaction --no-progress
           composer test
+          composer audit --locked
+
+      - name: Generate runtime SBOMs
+        run: |
+          npm run sbom:npm > virtual-media-folders-npm.cdx.json
+          npm run sbom:composer > virtual-media-folders-composer.cdx.json
+          node -e "JSON.parse(require('fs').readFileSync('virtual-media-folders-npm.cdx.json', 'utf8'))"
+          node -e "JSON.parse(require('fs').readFileSync('virtual-media-folders-composer.cdx.json', 'utf8'))"
 
       - name: Install production PHP dependencies
         run: composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
@@ -54,6 +73,7 @@ jobs:
             .github/*
             .distignore
             .editorconfig
+            .npmrc
             .wordpress-org/*
             assets/*
             docs/*
@@ -63,6 +83,8 @@ jobs:
             src/editor/*
             src/shared/*
             *.md
+            *-npm.cdx.json
+            *-composer.cdx.json
             package.json
             package-lock.json
             webpack.config.js
@@ -72,10 +94,13 @@ jobs:
             phpcs.xml
             i18n-map.json
 
-      - name: Attach ZIP to release
+      - name: Attach ZIP and SBOMs to release
         uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: virtual-media-folders.zip
+          files: |
+            virtual-media-folders.zip
+            virtual-media-folders-npm.cdx.json
+            virtual-media-folders-composer.cdx.json
           tag_name: ${{ github.event.release.tag_name }}
