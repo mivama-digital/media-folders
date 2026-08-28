@@ -6,6 +6,7 @@ on:
       - agent/toolchain-debt
     paths:
       - '.github/workflows/toolchain-lock-refresh.yml'
+      - 'scripts/check-licenses.mjs'
 
 permissions:
   contents: write
