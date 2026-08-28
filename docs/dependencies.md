@@ -1,26 +1,39 @@
 # Dependency baseline
 
-This file records the dependency baseline after the deterministic dependency migration.
+This document records the dependency baseline and maintenance policy for `media-folders` after the standalone Mivama dependency migration.
 
 ## Runtime policy
 
-- Node: >=24 <25
-- npm: >=11 <12
-- PHP: >=8.3
-- JavaScript lockfile: package-lock.json (lockfileVersion 3)
-- PHP lockfile: composer.lock
+- Node.js: `>=24 <25`
+- npm: `>=11 <12`
+- PHP: `>=8.3`
+- JavaScript lockfile: `package-lock.json` (`lockfileVersion: 3`)
+- PHP lockfile: `composer.lock`
 - Floating `latest` dependency specifications are prohibited.
-- `npm audit fix --force` is prohibited.
-- Major dependency upgrades must be isolated from feature changes.
+- `npm audit fix --force` and `--legacy-peer-deps` are prohibited as routine maintenance tools.
+- Major dependency upgrades must be isolated from feature changes and validated through the full test/build pipeline.
+- WordPress.org deployment remains manual and must use a release tag whose version matches all plugin metadata.
 
-## Current graph
+## Current security baseline
 
 - npm packages in lockfile: 1804
-- npm vulnerabilities (full development graph): 32 total (0 critical, 10 high, 21 moderate, 1 low)
-- npm vulnerabilities (runtime graph, dev omitted): 1 total (0 critical, 0 high, 0 moderate, 1 low)
-- Composer advisories: 0
+- npm vulnerabilities in the full development graph: 32 total (`0 critical`, `10 high`, `21 moderate`, `1 low`)
+- npm vulnerabilities in the runtime graph (`--omit=dev`): 1 total (`0 critical`, `0 high`, `0 moderate`, `1 low`)
+- Composer advisories: `0`
 
-The full npm graph includes WordPress build/test tooling. Release risk is gated separately against the runtime graph while full-graph findings are tracked until upstream toolchain fixes become available.
+The remaining high/moderate npm findings are in the WordPress development/build toolchain. They are reported in CI but are not treated as equivalent to vulnerabilities in the distributed plugin runtime. Runtime high/critical findings and Composer advisories are hard CI failures.
+
+## Reviewed npm install scripts
+
+npm install-time lifecycle scripts are controlled through the project `allowScripts` policy and `.npmrc` enables `strict-allow-scripts=true`. Only the currently reviewed package versions are approved:
+
+- `@parcel/watcher@2.6.0`
+- `core-js@3.50.0`
+- `core-js-pure@3.48.0`
+- `esbuild@0.27.3`
+- `unrs-resolver@1.12.2`
+
+A dependency update that introduces a new install script or changes one of these approved versions must be reviewed and explicitly re-approved. CI should fail rather than silently broadening the policy.
 
 ## Direct npm runtime dependencies
 
@@ -47,15 +60,44 @@ The full npm graph includes WordPress build/test tooling. Release risk is gated 
 - `react-dom`: `^18.3.1`
 - `vitest`: `^4.1.11`
 
+`@vitejs/plugin-react` intentionally remains on major 5 because major 6 requires Vite 8 and conflicts with the currently validated Vite/Vitest toolchain.
+
+## CI and release gates
+
+The permanent pipeline validates:
+
+- deterministic `npm ci` under the strict install-script policy;
+- runtime npm security audit as a hard gate;
+- full development npm audit as a visible non-blocking report while upstream WordPress tooling still carries known advisories;
+- JavaScript tests and production build;
+- PHP tests and `composer audit --locked`;
+- consistency between `package.json`, the WordPress plugin header, `readme.txt`, and release tags;
+- bundle-size budgets for primary JavaScript bundles;
+- distributable plugin files;
+- npm and Composer runtime SBOM generation;
+- pull-request dependency review for new high-severity dependency changes.
+
+GitHub Actions and WordPress.org deployment actions are pinned to immutable commit SHAs. Dependabot groups minor/patch updates by compatibility domain; major upgrades remain isolated instead of being bundled into routine update PRs.
+
 ## Maintenance commands
 
 ```bash
+npm ci
+npm run security:install-scripts
+npm run security:audit:runtime
 npm run security:audit
-npm run security:audit:high
+npm test -- --run
+npm run build
+npm run check:release-version
+npm run check:bundle-budget
+npm run sbom:npm
+npm run sbom:composer
 npm run deps:outdated
 npm run deps:tree
+composer validate --strict
+composer test
 composer audit --locked
 composer outdated --direct
 ```
 
-Security findings must be resolved through the dependency path that introduces them. Overrides require documentation and a removal condition.
+Security findings must be resolved through the dependency path that introduces them. Overrides require written justification, a narrowly scoped version range, and a clear removal condition.
