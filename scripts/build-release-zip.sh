@@ -27,11 +27,38 @@ for required in virtual-media-folders.php readme.txt LICENSE build/admin.js vend
 	fi
 done
 
+for forbidden in \
+	.github \
+	.npmrc \
+	node_modules \
+	tests \
+	scripts \
+	docs \
+	package.json \
+	package-lock.json \
+	composer.lock \
+	phpunit.xml.dist \
+	webpack.config.js \
+	vitest.config.js \
+	CONTRIBUTING.md \
+	SECURITY.md \
+	UPSTREAM.md; do
+	if [[ -e "${STAGING_DIR}/${PLUGIN_SLUG}/${forbidden}" ]]; then
+		echo "Forbidden development file leaked into release: ${forbidden}" >&2
+		exit 1
+	fi
+done
+
 (
 	cd "${STAGING_DIR}"
 	zip -qr "${OUTPUT_PATH}" "${PLUGIN_SLUG}"
 )
 
 unzip -tq "${OUTPUT_PATH}" >/dev/null
+
+if ! unzip -Z1 "${OUTPUT_PATH}" | grep -qx "${PLUGIN_SLUG}/virtual-media-folders.php"; then
+	echo "Release archive does not contain the plugin entry point at the expected path." >&2
+	exit 1
+fi
 
 echo "Built ${OUTPUT_NAME} from .distignore policy."
