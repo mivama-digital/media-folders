@@ -16,8 +16,11 @@ This file records the dependency baseline after the deterministic dependency mig
 ## Current graph
 
 - npm packages in lockfile: 1795
-- npm vulnerabilities: 32 total (0 critical, 10 high, 21 moderate, 1 low)
+- npm vulnerabilities (full development graph): 32 total (0 critical, 10 high, 21 moderate, 1 low)
+- npm vulnerabilities (runtime graph, dev omitted): 1 total (0 critical, 0 high, 0 moderate, 1 low)
 - Composer advisories: 0
+
+The full npm graph includes WordPress build/test tooling. Release risk is gated separately against the runtime graph while full-graph findings are tracked until upstream toolchain fixes become available.
 
 ## Direct npm runtime dependencies
 
