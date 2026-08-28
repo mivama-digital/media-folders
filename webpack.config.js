@@ -5,6 +5,7 @@ const DependencyExtractionWebpackPlugin = require('@wordpress/dependency-extract
 const postcssPlugins = require('@wordpress/postcss-plugins-preset');
 const cssnano = require('cssnano');
 const rtlcss = require('rtlcss');
+const sassEmbedded = require('sass-embedded');
 const TerserPlugin = require('terser-webpack-plugin');
 
 class RtlCssPlugin {
@@ -23,17 +24,69 @@ class RtlCssPlugin {
 
 						const css = assets[assetName].source().toString();
 						const rtlName = assetName.replace(/\.css$/, '-rtl.css');
-						const rtlSource = rtlcss.process(css);
 
 						compilation.emitAsset(
 							rtlName,
-							new webpack.sources.RawSource(rtlSource)
+							new webpack.sources.RawSource(rtlcss.process(css))
 						);
 					}
 				}
 			);
 		});
 	}
+}
+
+function createPostCssLoader(isProduction) {
+	return {
+		loader: require.resolve('postcss-loader'),
+		options: {
+			sourceMap: !isProduction,
+			postcssOptions: {
+				plugins: isProduction
+					? [
+						...postcssPlugins,
+						cssnano({
+							preset: [
+								'default',
+								{
+									discardComments: { removeAll: true },
+								},
+							],
+						}),
+					]
+					: postcssPlugins,
+			},
+		},
+	};
+}
+
+function createStyleLoaders(isProduction, { sass = false } = {}) {
+	const loaders = [
+		MiniCssExtractPlugin.loader,
+		{
+			loader: require.resolve('css-loader'),
+			options: {
+				importLoaders: sass ? 2 : 1,
+				sourceMap: !isProduction,
+			},
+		},
+		createPostCssLoader(isProduction),
+	];
+
+	if (sass) {
+		loaders.push({
+			loader: require.resolve('sass-loader'),
+			options: {
+				implementation: sassEmbedded,
+				sourceMap: !isProduction,
+				sassOptions: {
+					charset: false,
+				},
+			},
+		});
+	}
+
+	return loaders;
 }
 
 module.exports = (_env, argv = {}) => {
@@ -83,37 +136,11 @@ module.exports = (_env, argv = {}) => {
 				},
 				{
 					test: /\.css$/,
-					use: [
-						MiniCssExtractPlugin.loader,
-						{
-							loader: require.resolve('css-loader'),
-							options: {
-								importLoaders: 1,
-								sourceMap: !isProduction,
-							},
-						},
-						{
-							loader: require.resolve('postcss-loader'),
-							options: {
-								sourceMap: !isProduction,
-								postcssOptions: {
-									plugins: isProduction
-										? [
-											...postcssPlugins,
-											cssnano({
-												preset: [
-													'default',
-													{
-														discardComments: { removeAll: true },
-													},
-												],
-											}),
-										]
-										: postcssPlugins,
-								},
-							},
-						},
-					],
+					use: createStyleLoaders(isProduction),
+				},
+				{
+					test: /\.(sc|sa)ss$/,
+					use: createStyleLoaders(isProduction, { sass: true }),
 				},
 			],
 		},
