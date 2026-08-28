@@ -18,6 +18,7 @@ permissions:
 env:
   NODE_VERSION: '24'
   PHP_VERSION: '8.3'
+  WPORG_SLUG: virtual-media-folders
 
 jobs:
   deploy:
@@ -28,6 +29,17 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.tag }}
+
+      - name: Resolve WordPress.org release version
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          version="${RELEASE_TAG#v}"
+          if [ -z "${version}" ] || [ "${version}" = "${RELEASE_TAG}" ] && [[ "${RELEASE_TAG}" != [0-9]* ]]; then
+            echo "Invalid release tag: ${RELEASE_TAG}" >&2
+            exit 1
+          fi
+          echo "WPORG_VERSION=${version}" >> "${GITHUB_ENV}"
 
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -67,5 +79,7 @@ jobs:
       - name: Deploy to WordPress.org
         uses: 10up/action-wordpress-plugin-deploy@54bd289b8525fd23a5c365ec369185f2966529c2 # 2.3.0
         env:
+          SLUG: ${{ env.WPORG_SLUG }}
+          VERSION: ${{ env.WPORG_VERSION }}
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
