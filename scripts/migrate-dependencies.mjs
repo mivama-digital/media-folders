@@ -27,7 +27,8 @@ pkg.devDependencies['@testing-library/dom'] = '^10.4.1';
 pkg.devDependencies['@testing-library/jest-dom'] = '^7.0.1';
 pkg.devDependencies['@testing-library/react'] = '^16.3.2';
 pkg.devDependencies['@testing-library/user-event'] = '^14.6.6';
-pkg.devDependencies['@vitejs/plugin-react'] = '^6.1.0';
+// plugin-react 6 requires Vite 8. Keep the latest compatible Vite 7 line.
+pkg.devDependencies['@vitejs/plugin-react'] = '^5.1.4';
 pkg.devDependencies.jsdom = '^30.0.1';
 pkg.devDependencies.vitest = '^4.1.11';
 
