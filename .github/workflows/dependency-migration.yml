@@ -45,6 +45,7 @@ jobs:
           npm test -- --run
           npm run build
           npm audit --json > /tmp/npm-audit.json || true
+          npm audit --omit=dev --json > /tmp/npm-runtime-audit.json || true
 
       - name: Validate PHP graph
         run: |
@@ -60,8 +61,10 @@ jobs:
           const pkg = require('./package.json');
           const lock = require('./package-lock.json');
           const audit = JSON.parse(fs.readFileSync('/tmp/npm-audit.json', 'utf8'));
+          const runtimeAudit = JSON.parse(fs.readFileSync('/tmp/npm-runtime-audit.json', 'utf8'));
           const composer = JSON.parse(fs.readFileSync('/tmp/composer-audit.json', 'utf8'));
           const v = audit.metadata?.vulnerabilities || {};
+          const rv = runtimeAudit.metadata?.vulnerabilities || {};
           const packageCount = Object.keys(lock.packages || {}).length - 1;
           const composerAdvisories = Object.values(composer.advisories || {}).flat().length;
           const lines = [
@@ -83,8 +86,11 @@ jobs:
             '## Current graph',
             '',
             `- npm packages in lockfile: ${packageCount}`,
-            `- npm vulnerabilities: ${v.total ?? 0} total (${v.critical ?? 0} critical, ${v.high ?? 0} high, ${v.moderate ?? 0} moderate, ${v.low ?? 0} low)`,
+            `- npm vulnerabilities (full development graph): ${v.total ?? 0} total (${v.critical ?? 0} critical, ${v.high ?? 0} high, ${v.moderate ?? 0} moderate, ${v.low ?? 0} low)`,
+            `- npm vulnerabilities (runtime graph, dev omitted): ${rv.total ?? 0} total (${rv.critical ?? 0} critical, ${rv.high ?? 0} high, ${rv.moderate ?? 0} moderate, ${rv.low ?? 0} low)`,
             `- Composer advisories: ${composerAdvisories}`,
+            '',
+            'The full npm graph includes WordPress build/test tooling. Release risk is gated separately against the runtime graph while full-graph findings are tracked until upstream toolchain fixes become available.',
             '',
             '## Direct npm runtime dependencies',
             '',
