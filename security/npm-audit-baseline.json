@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "reviewedAt": "2026-08-28",
   "maxCounts": {
     "info": 0,
@@ -9,18 +9,18 @@
     "critical": 0,
     "total": 32
   },
-  "allowedAdvisories": [
-    "https://github.com/advisories/GHSA-8988-4f7v-96qf",
-    "https://github.com/advisories/GHSA-g7r4-m6w7-qqqr",
-    "https://github.com/advisories/GHSA-jmr9-qjv8-65gv",
-    "https://github.com/advisories/GHSA-22p9-wv53-3rq4",
-    "https://github.com/advisories/GHSA-v245-v573-v5vm",
-    "https://github.com/advisories/GHSA-6v5v-wf23-fmfq",
-    "https://github.com/advisories/GHSA-3ppc-4f35-3m26",
-    "https://github.com/advisories/GHSA-7r86-cg39-jmmj",
-    "https://github.com/advisories/GHSA-23c5-xmqv-rm74",
-    "https://github.com/advisories/GHSA-5c6j-r48x-rmvq",
-    "https://github.com/advisories/GHSA-qj8w-gfj5-8c6v",
-    "https://github.com/advisories/GHSA-w5hq-g745-h8pq"
-  ]
+  "allowedAdvisories": {
+    "https://github.com/advisories/GHSA-8988-4f7v-96qf": "moderate",
+    "https://github.com/advisories/GHSA-g7r4-m6w7-qqqr": "low",
+    "https://github.com/advisories/GHSA-jmr9-qjv8-65gv": "high",
+    "https://github.com/advisories/GHSA-22p9-wv53-3rq4": "high",
+    "https://github.com/advisories/GHSA-v245-v573-v5vm": "high",
+    "https://github.com/advisories/GHSA-6v5v-wf23-fmfq": "moderate",
+    "https://github.com/advisories/GHSA-3ppc-4f35-3m26": "high",
+    "https://github.com/advisories/GHSA-7r86-cg39-jmmj": "high",
+    "https://github.com/advisories/GHSA-23c5-xmqv-rm74": "high",
+    "https://github.com/advisories/GHSA-5c6j-r48x-rmvq": "high",
+    "https://github.com/advisories/GHSA-qj8w-gfj5-8c6v": "high",
+    "https://github.com/advisories/GHSA-w5hq-g745-h8pq": "moderate"
+  }
 }
