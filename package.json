@@ -51,6 +51,8 @@
 		"core-js@3.50.0": true,
 		"core-js-pure@3.48.0": true,
 		"esbuild@0.27.3": true,
+		"fsevents@2.3.2": true,
+		"fsevents@2.3.3": true,
 		"unrs-resolver@1.12.2": true
 	},
 	"engines": {
