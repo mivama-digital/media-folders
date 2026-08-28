@@ -27,7 +27,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Detect Dependency Graph availability
+        id: dependency-graph
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          status="$(curl --silent --show-error --output /tmp/dependency-graph-sbom.json --write-out '%{http_code}' \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "Accept: application/vnd.github+json" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/dependency-graph/sbom")"
+
+          if [ "${status}" = "200" ]; then
+            echo "enabled=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "enabled=false" >> "${GITHUB_OUTPUT}"
+            echo "::warning::GitHub Dependency Graph is unavailable (HTTP ${status}). Enable it in repository Code security settings to activate the blocking Dependency Review gate."
+          fi
+
       - name: Review dependency changes
+        if: ${{ steps.dependency-graph.outputs.enabled == 'true' }}
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high
@@ -132,6 +151,7 @@ jobs:
       - name: Build and verify JavaScript assets
         run: |
           npm ci
+          npm run security:install-scripts
           npm run security:audit:runtime
           npm run build
           npm run check:release-version
