@@ -15,7 +15,7 @@
 		"security:audit": "npm audit",
 		"security:audit:high": "npm audit --audit-level=high",
 		"security:audit:runtime": "npm audit --omit=dev --audit-level=high",
-		"security:install-scripts": "npm install-scripts ls",
+		"security:install-scripts": "node scripts/check-install-script-policy.mjs",
 		"check:bundle-budget": "node scripts/check-bundle-budget.mjs",
 		"check:release-version": "node scripts/check-release-version.mjs",
 		"sbom:npm": "npm sbom --omit=dev --sbom-format=cyclonedx --sbom-type=application",
