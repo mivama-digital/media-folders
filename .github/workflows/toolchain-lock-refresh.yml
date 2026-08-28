@@ -1,4 +1,4 @@
-name: Toolchain migration validation
+name: Commit focused production assets
 
 on:
   push:
@@ -6,13 +6,6 @@ on:
       - agent/toolchain-debt
     paths:
       - '.github/workflows/toolchain-lock-refresh.yml'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'webpack.config.js'
-      - 'scripts/check-engines.mjs'
-      - 'scripts/check-licenses.mjs'
-      - 'scripts/check-install-script-policy.mjs'
-      - 'security/npm-audit-baseline.json'
 
 permissions:
   contents: write
@@ -21,7 +14,7 @@ env:
   NODE_VERSION: '24'
 
 jobs:
-  validate:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
@@ -35,80 +28,43 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
-      - name: Refresh lockfile from package metadata
-        id: lockfile
-        run: |
-          npm install --package-lock-only --ignore-scripts
+      - name: Install focused graph
+        run: npm ci
 
-          if git diff --quiet -- package-lock.json; then
-            echo 'changed=false' >> "${GITHUB_OUTPUT}"
+      - name: Verify dependency policy
+        run: |
+          npm run check:engines
+          npm run security:install-scripts
+          npm run security:audit:runtime
+          npm run security:audit:dev-baseline
+          npm run check:licenses
+
+      - name: Run JavaScript tests
+        run: npm test -- --run
+
+      - name: Build production assets
+        run: npm run build
+
+      - name: Verify generated assets
+        run: |
+          npm run check:release-version
+          npm run check:bundle-budget
+          test -f build/admin.asset.php
+          test -f build/admin-rtl.css
+          test -f build/editor.asset.php
+          test -f build/editor-rtl.css
+          test -f build/shared.asset.php
+          test -f build/shared-rtl.css
+
+      - name: Commit generated production assets
+        run: |
+          if git diff --quiet -- build; then
+            echo 'Generated build artifacts are already current.'
             exit 0
           fi
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add package-lock.json
-          git commit -m 'build: refresh focused toolchain lockfile'
+          git add build
+          git commit -m 'build: regenerate focused production assets'
           git push origin HEAD:agent/toolchain-debt
-          echo 'changed=true' >> "${GITHUB_OUTPUT}"
-
-      - name: Install focused graph
-        if: ${{ steps.lockfile.outputs.changed != 'true' }}
-        run: npm ci
-
-      - name: Summarize focused graph
-        if: ${{ steps.lockfile.outputs.changed != 'true' }}
-        run: |
-          node - <<'NODE'
-          const lock = require('./package-lock.json');
-          const packages = Object.entries(lock.packages || {}).filter(([path]) => path);
-          const installScripts = packages
-            .filter(([, entry]) => entry.hasInstallScript && entry.version)
-            .map(([path, entry]) => {
-              const marker = 'node_modules/';
-              const index = path.lastIndexOf(marker);
-              const name = index === -1 ? path : path.slice(index + marker.length);
-              return `${name}@${entry.version}`;
-            });
-          console.log(`locked packages: ${packages.length}`);
-          console.log(`install-script packages: ${[...new Set(installScripts)].sort().join(', ')}`);
-          NODE
-
-      - name: Check engine contract
-        if: ${{ steps.lockfile.outputs.changed != 'true' }}
-        run: npm run check:engines
-
-      - name: Inspect install-script policy
-        if: ${{ steps.lockfile.outputs.changed != 'true' }}
-        run: npm run security:install-scripts || true
-
-      - name: Inspect full audit
-        if: ${{ steps.lockfile.outputs.changed != 'true' }}
-        run: npm audit || true
-
-      - name: Inspect runtime license policy
-        if: ${{ steps.lockfile.outputs.changed != 'true' }}
-        run: npm run check:licenses || true
-
-      - name: Run JavaScript tests
-        if: ${{ steps.lockfile.outputs.changed != 'true' }}
-        run: npm test -- --run
-
-      - name: Build production assets
-        if: ${{ steps.lockfile.outputs.changed != 'true' }}
-        run: npm run build
-
-      - name: Show generated asset contract
-        if: ${{ steps.lockfile.outputs.changed != 'true' }}
-        run: |
-          find build -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
-          for asset in build/*.asset.php; do
-            echo "===== ${asset} ====="
-            cat "${asset}"
-          done
-
-      - name: Validate release invariants
-        if: ${{ steps.lockfile.outputs.changed != 'true' }}
-        run: |
-          npm run check:release-version
-          npm run check:bundle-budget
