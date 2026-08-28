@@ -1,24 +1,32 @@
 # Development Guide
 
-This document covers development setup, project structure, and contribution guidelines for Virtual Media Folders.
+This document covers development setup, project structure, and contribution guidelines for Virtual Media Folders as maintained by Mivama Digital.
 
 ## Requirements
 
-- Node.js 18+
+- Node.js 24.x
+- npm 11.x
 - PHP 8.3+
-- Composer
+- Composer 2
 - WordPress 6.8+
+
+The exact JavaScript package-manager contract is recorded in `package.json`. Dependency and security policy is documented in [dependencies.md](dependencies.md).
 
 ## Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/soderlind/virtual-media-folders.git
-cd virtual-media-folders
+# Clone the maintained repository
+git clone https://github.com/mivama-digital/media-folders.git
+cd media-folders
 
-# Install dependencies
+# Install the exact locked dependency graphs
+npm ci
 composer install
-npm install
+
+# Verify reviewed install scripts and runtime security
+npm run security:install-scripts
+npm run security:audit:runtime
+composer audit --locked
 
 # Start development build with watch
 npm run start
@@ -27,7 +35,9 @@ npm run start
 npm run build
 ```
 
-## Testing
+`npm ci` is intentionally protected by the repository's strict install-script policy. Do not bypass dependency or peer-resolution failures with `--force` or `--legacy-peer-deps`.
+
+## Testing and validation
 
 ```bash
 # Run PHP tests (PHPUnit)
@@ -35,26 +45,37 @@ composer test
 # or
 vendor/bin/phpunit
 
-# Run JavaScript tests (Vitest)
-npm test
+# Run JavaScript tests once (Vitest)
+npm test -- --run
 
 # Run JS tests in watch mode
-npm test -- --watch
+npm test
+
+# Validate security and release invariants
+npm run security:audit:runtime
+composer audit --locked
+npm run build
+npm run check:release-version
+npm run check:bundle-budget
 ```
+
+The full development dependency audit is available with `npm run security:audit`. Known findings inherited through the WordPress build/tooling graph are tracked separately; runtime high/critical findings and Composer advisories are blocking.
 
 ## Project Structure
 
 ```
-virtual-media-folders/
+media-folders/
 ├── build/                  # Compiled assets (generated)
 ├── docs/                   # Documentation
 │   ├── a11y.md            # Accessibility documentation
+│   ├── dependencies.md    # Dependency/security policy
 │   ├── design.md          # Design decisions
 │   └── development.md     # This file
 ├── languages/              # Translation files
+├── scripts/                # Validation and maintenance scripts
 ├── src/
 │   ├── Admin.php          # Media Library integration
-│   ├── Editor.php         # Gutenberg integration  
+│   ├── Editor.php         # Gutenberg integration
 │   ├── RestApi.php        # REST API endpoints
 │   ├── Settings.php       # Settings page
 │   ├── Suggestions.php    # Smart folder suggestions
@@ -87,6 +108,8 @@ The plugin uses `@wordpress/scripts` for building:
 - **Entry points**: `admin`, `editor`, `settings` (configured in `webpack.config.js`)
 - **Output**: `build/` directory with minified JS/CSS and asset manifests
 
+Primary JavaScript bundles are protected by explicit size budgets. Run `npm run check:bundle-budget` after a production build. Dependency upgrades that materially increase a bundle must be reviewed rather than silently raising the budget.
+
 ## REST API
 
 The plugin provides REST API endpoints under `/wp-json/vmfo/v1`:
@@ -108,6 +131,7 @@ The plugin provides REST API endpoints under `/wp-json/vmfo/v1`:
 ### Authentication
 
 Use [Application Passwords](https://make.wordpress.org/core/2020/11/05/application-passwords-integration-guide/) (WordPress 5.6+). Generate one at **Users > Profile > Application Passwords**.
+
 - `username`: your WordPress username
 - `xxxx xxxx xxxx xxxx xxxx xxxx`: the generated application password
 
@@ -119,8 +143,6 @@ curl -X POST "https://example.com/wp-json/vmfo/v1/folders" \
   -u "username:xxxx xxxx xxxx xxxx xxxx xxxx" \
   -H "Content-Type: application/json" \
   -d '{"name": "Photos", "parent": 0}'
-
-# Response: {"id": 5, "name": "Photos", "slug": "photos", "parent": 0, "count": 0}
 
 # Add media (ID 123) to the folder (ID 5)
 curl -X POST "https://example.com/wp-json/vmfo/v1/folders/5/media" \
@@ -135,7 +157,7 @@ curl "https://example.com/wp-json/vmfo/v1/folders" \
 
 ## AI Abilities API
 
-The [AI Ability add-on](https://github.com/soderlind/vmfa-ai-ability) exposes three Abilities API tools for AI/MCP integrations:
+The upstream [AI Ability add-on](https://github.com/soderlind/vmfa-ai-ability) exposes three Abilities API tools for AI/MCP integrations:
 
 - `vmfo/list-folders` (read-only)
 - `vmfo/create-folder` (write)
@@ -187,11 +209,7 @@ Recommended flow:
 ```json
 {
     "folder_id": 2285,
-    "attachment_ids": [
-        101,
-        205,
-        309
-    ]
+    "attachment_ids": [101, 205, 309]
 }
 ```
 
@@ -201,40 +219,16 @@ Recommended flow:
 {
     "success": true,
     "folder_id": 2285,
-    "attachment_ids": [
-        101,
-        205,
-        309
-    ],
+    "attachment_ids": [101, 205, 309],
     "processed_count": 3,
-    "message": "Processed 3 media items.",
-    "results": [
-        {
-            "success": true,
-            "media_id": 101,
-            "folder_id": 2285,
-            "message": "Media added to folder."
-        },
-        {
-            "success": true,
-            "media_id": 205,
-            "folder_id": 2285,
-            "message": "Media added to folder."
-        },
-        {
-            "success": true,
-            "media_id": 309,
-            "folder_id": 2285,
-            "message": "Media added to folder."
-        }
-    ]
+    "message": "Processed 3 media items."
 }
 ```
 
 - `vmfo/list-folders` and `vmfo/add-to-folder` require the `upload_files` capability.
 - `vmfo/create-folder` requires the `manage_categories` capability.
 
-For full end-to-end examples (including image upload and editor client setup), see the [MCP Integration Guide](https://github.com/soderlind/vmfa-ai-ability/blob/main/docs/mcp.md) in the AI Ability add-on.
+For full end-to-end examples (including image upload and editor client setup), see the [MCP Integration Guide](https://github.com/soderlind/vmfa-ai-ability/blob/main/docs/mcp.md) in the upstream AI Ability add-on.
 
 ### WordPress MCP Adapter Examples
 
@@ -256,79 +250,11 @@ curl -X POST "https://example.com/wp-json/mcp/mcp-adapter-default-server" \
     }'
 ```
 
-Call `vmfo/list-folders` via the gateway tool (`mcp-adapter-execute-ability`):
+Call an ability through the gateway tool `mcp-adapter-execute-ability` by passing the relevant `ability_name` and parameters. The normal AI flow is:
 
-```bash
-curl -X POST "https://example.com/wp-json/mcp/mcp-adapter-default-server" \
-    -u "username:application-password" \
-    -H "Content-Type: application/json" \
-    -d '{
-        "jsonrpc": "2.0",
-        "id": 2,
-        "method": "tools/call",
-        "params": {
-            "name": "mcp-adapter-execute-ability",
-            "arguments": {
-                "ability_name": "vmfo/list-folders",
-                "parameters": {
-                    "search": "travel",
-                    "hide_empty": false
-                }
-            }
-        }
-    }'
-```
-
-Call `vmfo/add-to-folder` via the gateway tool (`mcp-adapter-execute-ability`):
-
-```bash
-curl -X POST "https://example.com/wp-json/mcp/mcp-adapter-default-server" \
-    -u "username:application-password" \
-    -H "Content-Type: application/json" \
-    -d '{
-        "jsonrpc": "2.0",
-        "id": 3,
-        "method": "tools/call",
-        "params": {
-            "name": "mcp-adapter-execute-ability",
-            "arguments": {
-                "ability_name": "vmfo/add-to-folder",
-                "parameters": {
-                    "folder_id": 2285,
-                    "attachment_ids": [101, 205, 309]
-                }
-            }
-        }
-    }'
-```
-
-Call `vmfo/create-folder` via the gateway tool (`mcp-adapter-execute-ability`):
-
-```bash
-curl -X POST "https://example.com/wp-json/mcp/mcp-adapter-default-server" \
-    -u "username:application-password" \
-    -H "Content-Type: application/json" \
-    -d '{
-        "jsonrpc": "2.0",
-        "id": 4,
-        "method": "tools/call",
-        "params": {
-            "name": "mcp-adapter-execute-ability",
-            "arguments": {
-                "ability_name": "vmfo/create-folder",
-                "parameters": {
-                    "name": "Travel",
-                    "parent_id": 0
-                }
-            }
-        }
-    }'
-```
-
-In practice, the AI flow is:
-
-1. `tools/call` -> `mcp-adapter-execute-ability` with `ability_name = vmfo/list-folders`
-2. `tools/call` -> `mcp-adapter-execute-ability` with `ability_name = vmfo/add-to-folder`
+1. `tools/call` → `mcp-adapter-execute-ability` with `ability_name = vmfo/list-folders`
+2. optionally create the missing folder with `ability_name = vmfo/create-folder`
+3. `tools/call` → `mcp-adapter-execute-ability` with `ability_name = vmfo/add-to-folder`
 
 ### MCP Adapter Smoke Test
 
@@ -338,7 +264,7 @@ From the plugin root:
 
 ```bash
 MCP_BASE_URL="https://example.com/wp-json/mcp/mcp-adapter-default-server" \
-MCP_USER="per" \
+MCP_USER="username" \
 MCP_APP_PASS="xxxx xxxx xxxx xxxx xxxx xxxx" \
 ./scripts/mcp-adapter-smoke-test.sh
 ```
@@ -421,27 +347,34 @@ The `i18n-map.json` file maps source files to their compiled outputs for proper 
 
 ## Creating a Distribution
 
-```bash
-# Install WP-CLI dist-archive command (one-time)
-wp package install wp-cli/dist-archive-command
+GitHub Releases are the canonical distribution path. The release workflow re-runs tests and security checks, validates that the release tag matches all plugin version metadata, enforces bundle budgets, installs production Composer dependencies, builds the ZIP, and attaches npm/Composer runtime SBOMs.
 
-# Build and create zip
+For a local packaging smoke test, run the same validation gates first:
+
+```bash
+npm ci
+npm run security:audit:runtime
+npm test -- --run
 npm run build
-composer install --no-dev
-wp dist-archive . virtual-media-folders.zip --plugin-dirname=virtual-media-folders
+npm run check:release-version
+npm run check:bundle-budget
+composer validate --strict
+composer install --prefer-dist --no-interaction --no-progress
+composer test
+composer audit --locked
+composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
 ```
 
-The `.distignore` file controls what's excluded from the distribution.
+Do not treat a manually assembled ZIP as a release artifact. WordPress.org deployment is a separate, explicit manual workflow and must not be triggered merely by creating a Git tag.
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/my-feature`)
-3. Write tests for new functionality
-4. Ensure all tests pass (`composer test && npm test`)
-5. Commit your changes
-6. Push to the branch
-7. Submit a pull request
+1. Create a short-lived branch from the Mivama `main` branch.
+2. Keep feature work separate from dependency-major migrations.
+3. Write or update tests for behavioral changes.
+4. Run the checks listed in [CONTRIBUTING.md](../CONTRIBUTING.md).
+5. Push the branch and open a pull request against `mivama-digital/media-folders`.
+6. Reference upstream commits or pull requests when porting upstream work.
 
 ### Code Style
 
