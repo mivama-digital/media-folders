@@ -64,8 +64,11 @@ jobs:
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
           npm ci
+          npm run check:engines
           npm run security:install-scripts
           npm run security:audit:runtime
+          npm run security:audit:dev-baseline
+          npm run check:licenses
           npm test -- --run
           npm run build
           npm run check:release-version
