@@ -15,7 +15,7 @@ This file records the dependency baseline after the deterministic dependency mig
 
 ## Current graph
 
-- npm packages in lockfile: 1795
+- npm packages in lockfile: 1804
 - npm vulnerabilities (full development graph): 32 total (0 critical, 10 high, 21 moderate, 1 low)
 - npm vulnerabilities (runtime graph, dev omitted): 1 total (0 critical, 0 high, 0 moderate, 1 low)
 - Composer advisories: 0
@@ -36,15 +36,16 @@ The full npm graph includes WordPress build/test tooling. Release risk is gated 
 
 ## Direct npm development dependencies
 
-- `@testing-library/jest-dom`: `^6.9.1`
-- `@testing-library/react`: `^14.0.0`
-- `@testing-library/user-event`: `^14.6.1`
-- `@vitejs/plugin-react`: `^5.1.2`
+- `@testing-library/dom`: `^10.4.1`
+- `@testing-library/jest-dom`: `^7.0.1`
+- `@testing-library/react`: `^16.3.2`
+- `@testing-library/user-event`: `^14.6.6`
+- `@vitejs/plugin-react`: `^5.1.4`
 - `@wordpress/scripts`: `^34.2.0`
-- `jsdom`: `^24.0.0`
+- `jsdom`: `^30.0.1`
 - `react`: `^18.3.1`
 - `react-dom`: `^18.3.1`
-- `vitest`: `^4.0.18`
+- `vitest`: `^4.1.11`
 
 ## Maintenance commands
 
