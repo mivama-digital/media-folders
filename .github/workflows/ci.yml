@@ -69,6 +69,9 @@ jobs:
       - name: Install JavaScript dependencies
         run: npm ci
 
+      - name: Verify Node.js and npm engines
+        run: npm run check:engines
+
       - name: Verify install-script policy
         run: npm run security:install-scripts
 
@@ -77,6 +80,9 @@ jobs:
 
       - name: Validate development dependency audit baseline
         run: npm run security:audit:dev-baseline
+
+      - name: Validate GPLv2-compatible runtime licenses
+        run: npm run check:licenses
 
       - name: Run JavaScript tests
         run: npm test -- --run
@@ -152,9 +158,11 @@ jobs:
       - name: Build and verify JavaScript assets
         run: |
           npm ci
+          npm run check:engines
           npm run security:install-scripts
           npm run security:audit:runtime
           npm run security:audit:dev-baseline
+          npm run check:licenses
           npm run build
           npm run check:release-version
           npm run check:bundle-budget
