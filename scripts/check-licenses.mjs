@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-
-const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
+import { execFileSync } from 'node:child_process';
 
 // Keep this list deliberately narrow. It mirrors the GPLv2-compatible license
 // families accepted by WordPress build tooling, but the check itself is local
@@ -113,18 +112,8 @@ function isCompatibleExpression(expression) {
 	return compatibleLicenses.has(normalized);
 }
 
-function packageNameFromLockPath(lockPath) {
-	const marker = 'node_modules/';
-	const index = lockPath.lastIndexOf(marker);
-	return index === -1 ? lockPath : lockPath.slice(index + marker.length);
-}
-
-function readInstalledLicense(lockPath) {
-	const packageJsonPath = path.join(lockPath, 'package.json');
-	if (!fs.existsSync(packageJsonPath)) {
-		return null;
-	}
-
+function readLicense(packageDirectory) {
+	const packageJsonPath = path.join(packageDirectory, 'package.json');
 	const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 	const rawLicense =
 		packageJson.license ??
@@ -132,31 +121,49 @@ function readInstalledLicense(lockPath) {
 			? packageJson.licenses.map((item) => item?.type ?? item).join(' OR ')
 			: null);
 
-	return typeof rawLicense === 'object' ? rawLicense?.type ?? null : rawLicense;
+	return {
+		name: packageJson.name,
+		version: packageJson.version,
+		license: typeof rawLicense === 'object' ? rawLicense?.type ?? null : rawLicense,
+	};
 }
 
-const incompatible = [];
-const checked = [];
-
-for (const [lockPath, entry] of Object.entries(lock.packages || {})) {
-	if (!lockPath || entry?.dev === true) {
-		continue;
+const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const projectRoot = fs.realpathSync(process.cwd());
+const productionTree = execFileSync(
+	npmCommand,
+	['ls', '--omit=dev', '--all', '--parseable', '--silent'],
+	{
+		encoding: 'utf8',
+		maxBuffer: 20 * 1024 * 1024,
 	}
+);
 
-	const name = entry?.name || packageNameFromLockPath(lockPath);
-	const license = entry?.license || readInstalledLicense(lockPath);
-	checked.push(`${name}@${entry?.version || 'unknown'}`);
+const packageDirectories = [
+	...new Set(
+		productionTree
+			.split(/\r?\n/)
+			.map((line) => line.trim())
+			.filter(Boolean)
+			.map((directory) => fs.realpathSync(directory))
+			.filter((directory) => directory !== projectRoot)
+	),
+];
 
-	if (!license || !isCompatibleExpression(license)) {
+const incompatible = [];
+for (const packageDirectory of packageDirectories) {
+	const dependency = readLicense(packageDirectory);
+	if (!dependency.license || !isCompatibleExpression(dependency.license)) {
 		incompatible.push({
-			name,
-			version: entry?.version || 'unknown',
-			license: license || 'missing',
+			...dependency,
+			license: dependency.license || 'missing',
 		});
 	}
 }
 
-console.log(`GPLv2-compatible runtime license check: ${checked.length} packages inspected.`);
+console.log(
+	`GPLv2-compatible runtime license check: ${packageDirectories.length} packages inspected.`
+);
 
 if (incompatible.length > 0) {
 	console.error('Incompatible or unknown runtime dependency licenses:');
