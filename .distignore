@@ -12,6 +12,9 @@
 .editorconfig
 .npmrc
 .DS_Store
+coverage/
+*.zip
+*.cdx.json
 
 # Build tools and configs
 node_modules
