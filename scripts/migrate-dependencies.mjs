@@ -32,6 +32,11 @@ pkg.devDependencies['@vitejs/plugin-react'] = '^5.1.4';
 pkg.devDependencies.jsdom = '^30.0.1';
 pkg.devDependencies.vitest = '^4.1.11';
 
+// Keep the DnD packages as one runtime compatibility wave.
+pkg.dependencies['@dnd-kit/core'] = '^6.3.1';
+pkg.dependencies['@dnd-kit/modifiers'] = '^9.0.0';
+pkg.dependencies['@dnd-kit/sortable'] = '^10.0.0';
+
 pkg.engines = {
   ...(pkg.engines || {}),
   node: '>=24 <25',
