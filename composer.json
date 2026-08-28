@@ -1,5 +1,5 @@
 {
-	"name": "soderlind/virtual-media-folders",
+	"name": "mivama-digital/media-folders",
 	"description": "Virtual folder organization and smart management for the WordPress Media Library.",
 	"type": "wordpress-plugin",
 	"license": "GPL-2.0-or-later",
@@ -16,9 +16,18 @@
 	"authors": [
 		{
 			"name": "Per Soderlind",
-			"email": "per@soderlind.no"
+			"email": "per@soderlind.no",
+			"role": "Original author"
+		},
+		{
+			"name": "Mivama Digital",
+			"role": "Maintainer"
 		}
 	],
+	"support": {
+		"issues": "https://github.com/mivama-digital/media-folders/issues",
+		"source": "https://github.com/mivama-digital/media-folders"
+	},
 	"require": {
 		"php": ">=8.3",
 		"composer/installers": "^2.0"
