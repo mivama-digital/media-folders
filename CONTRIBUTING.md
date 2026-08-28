@@ -15,29 +15,39 @@ Direct feature development on `main` is discouraged.
 
 Requirements:
 
-- Node.js 24+
-- npm
+- Node.js 24.x
+- npm 11.x
 - PHP 8.3+
 - Composer 2
 
-Install dependencies:
+Install dependencies from the committed lockfiles:
 
 ```bash
 npm ci
 composer install
 ```
 
+`npm ci` is intentionally subject to the repository's strict install-script policy. Do not bypass dependency resolution or install-script failures with `--force` or `--legacy-peer-deps`.
+
 ## Required checks
 
 Before opening or updating a pull request, run:
 
 ```bash
+npm run security:install-scripts
+npm run security:audit:runtime
 npm test -- --run
-composer test
 npm run build
+npm run check:release-version
+npm run check:bundle-budget
+composer validate --strict
+composer test
+composer audit --locked
 ```
 
-Generated build files that are intentionally tracked must be updated together with their source changes.
+The complete development dependency graph should also be reviewed with `npm run security:audit`. Known findings inherited through the WordPress build/tooling graph are tracked separately; runtime high/critical findings and Composer advisories are blocking.
+
+Generated build files that are intentionally tracked must be updated together with their source changes. See [docs/dependencies.md](docs/dependencies.md) for the dependency, install-script, audit, and major-upgrade policy.
 
 ## Pull requests
 
@@ -46,9 +56,11 @@ A pull request should:
 - describe the problem and the chosen solution;
 - stay focused on one coherent change;
 - include or update tests for behavioral changes;
-- call out WordPress, PHP, accessibility, migration, or compatibility risks;
+- call out WordPress, PHP, accessibility, migration, dependency, or compatibility risks;
 - identify relevant upstream commits when porting upstream work;
 - avoid unrelated formatting or generated-file churn.
+
+Major dependency upgrades belong in isolated pull requests so their compatibility impact can be tested independently.
 
 ## Upstream-derived changes
 
@@ -58,4 +70,4 @@ See [UPSTREAM.md](UPSTREAM.md) for the maintenance policy.
 
 ## Releases
 
-Release changes are reviewed separately from normal feature work. Do not deploy to WordPress.org merely by creating a Git tag. WordPress.org deployment requires an explicit release action and configured Mivama-owned credentials.
+Release changes are reviewed separately from normal feature work. Do not deploy to WordPress.org merely by creating a Git tag. WordPress.org deployment requires an explicit manual action, a matching release version/tag, passing release gates, and configured Mivama-owned credentials.
