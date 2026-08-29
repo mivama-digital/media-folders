@@ -57,6 +57,7 @@ npm test
 # Validate dependency, security, and release invariants
 npm run check:engines
 npm run security:install-scripts
+npm run security:audit
 npm run security:audit:runtime
 npm run security:audit:dev-baseline
 npm run check:licenses
@@ -66,7 +67,9 @@ npm run check:release-version
 npm run check:bundle-budget
 ```
 
-The raw full development dependency audit is available with `npm run security:audit`. The reviewed baseline currently contains one Low advisory and no Moderate, High, or Critical advisories. The baseline is ratcheting: new findings, severity increases, or reintroduced resolved findings are blocking.
+The full development and runtime npm audits are expected to contain zero advisories. `security/npm-audit-baseline.json` has zero allowed findings at every severity, so any newly reported advisory is blocking.
+
+Vitest does not require a private npm copy of WordPress Components. `vitest.config.js` aliases host-provided WordPress modules that are intentionally absent from the local dependency graph to small adapters under `tests/js/wordpress-host/`. This keeps tests deterministic without pulling WordPress host framework trees into npm solely for module resolution.
 
 ## Project Structure
 
@@ -102,7 +105,8 @@ media-folders/
 │       ├── hooks/         # useFolderData, useMoveMode, etc.
 │       └── utils/         # folderApi.js
 ├── tests/
-│   ├── js/                # JavaScript tests (Vitest)
+│   ├── js/
+│   │   └── wordpress-host/ # Test-only adapters for WordPress host modules
 │   └── php/               # PHP tests (PHPUnit)
 ├── uninstall.php          # Cleanup on uninstall
 └── virtual-media-folders.php  # Main plugin file
@@ -130,9 +134,11 @@ The configured entry points are:
 
 `npm run start` runs Webpack in watch mode without a development server. `npm run build` creates the production files under `build/`. The build preserves WordPress dependency extraction and the existing asset-manifest contract while avoiding unrelated E2E, Lighthouse/Puppeteer, Markdown-lint, copy-plugin, and Webpack-dev-server dependency trees.
 
+`@wordpress/components` is consumed as the WordPress-provided `wp-components` external rather than installed as a private npm runtime dependency. This is validated by the generated `*.asset.php` manifests. `@wordpress/icons` remains installed because icons are bundled by this build rather than externalized.
+
 Primary JavaScript bundles are protected by explicit size budgets. Run `npm run check:bundle-budget` after a production build. Dependency upgrades that materially increase a bundle must be reviewed rather than silently raising the budget.
 
-See [dependencies.md](dependencies.md) for the exact focused toolchain, current package counts, security baseline, install-script approvals, and license policy.
+See [dependencies.md](dependencies.md) for the exact focused toolchain, current package counts, zero-advisory security baseline, install-script approvals, host-module rules, and license policy.
 
 ## REST API
 
@@ -379,6 +385,7 @@ For a local packaging smoke test, run the same validation gates and canonical pa
 npm ci
 npm run check:engines
 npm run security:install-scripts
+npm run security:audit
 npm run security:audit:runtime
 npm run security:audit:dev-baseline
 npm run check:licenses

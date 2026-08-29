@@ -1,15 +1,13 @@
 {
   "schemaVersion": 2,
-  "reviewedAt": "2026-08-28",
+  "reviewedAt": "2026-08-29",
   "maxCounts": {
     "info": 0,
-    "low": 1,
+    "low": 0,
     "moderate": 0,
     "high": 0,
     "critical": 0,
-    "total": 1
+    "total": 0
   },
-  "allowedAdvisories": {
-    "https://github.com/advisories/GHSA-g7r4-m6w7-qqqr": "low"
-  }
+  "allowedAdvisories": {}
 }

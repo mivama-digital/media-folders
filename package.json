@@ -15,7 +15,7 @@
 		"i18n:make-php": "wp i18n make-php languages/",
 		"security:audit": "npm audit",
 		"security:audit:high": "npm audit --audit-level=high",
-		"security:audit:runtime": "npm audit --omit=dev --audit-level=high",
+		"security:audit:runtime": "npm audit --omit=dev --audit-level=low",
 		"security:audit:dev-baseline": "node scripts/check-dev-audit-baseline.mjs",
 		"security:install-scripts": "node scripts/check-install-script-policy.mjs",
 		"check:engines": "node scripts/check-engines.mjs",
@@ -62,7 +62,6 @@
 		"@dnd-kit/modifiers": "^9.0.0",
 		"@dnd-kit/sortable": "^10.0.0",
 		"@wordpress/api-fetch": "7.41.0",
-		"@wordpress/components": "36.1.0",
 		"@wordpress/data": "10.50.0",
 		"@wordpress/element": "8.2.0",
 		"@wordpress/i18n": "6.23.0",
@@ -71,7 +70,7 @@
 	"allowScripts": {
 		"@parcel/watcher@2.6.0": true,
 		"core-js@3.50.0": true,
-		"esbuild@0.27.3": true,
+		"esbuild@0.28.2": true,
 		"fsevents@2.3.3": true
 	},
 	"browserslist": [

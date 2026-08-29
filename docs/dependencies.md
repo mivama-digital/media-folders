@@ -1,6 +1,6 @@
 # Dependency baseline
 
-This document records the dependency baseline and maintenance policy for `media-folders` after the standalone Mivama dependency migration and the focused JavaScript toolchain cleanup.
+This document records the dependency baseline and maintenance policy for `media-folders` after the standalone Mivama dependency migration, focused JavaScript toolchain cleanup, and zero-advisory hardening.
 
 ## Runtime policy
 
@@ -17,7 +17,7 @@ This document records the dependency baseline and maintenance policy for `media-
 
 ## Focused JavaScript toolchain
 
-The repository no longer depends on the `@wordpress/scripts` meta-package. The plugin only needs a subset of that stack, so the build is now explicit and intentionally small:
+The repository no longer depends on the `@wordpress/scripts` meta-package. The plugin only needs a subset of that stack, so the build is explicit and intentionally small:
 
 - Webpack + webpack-cli for bundling and watch mode;
 - `@wordpress/babel-preset-default` + Babel loader for WordPress-compatible JavaScript transpilation;
@@ -34,39 +34,32 @@ Removing the meta-package also removes tool families that this plugin does not u
 
 The focused graph preserves the existing plugin build contract: JavaScript bundles, CSS, RTL CSS, WordPress dependency extraction, and generated asset manifests.
 
-## Current security baseline
+## Zero-advisory security baseline
 
 On Node.js 24.19.0 / npm 11.17.0 CI:
 
-- `package-lock.json`: 687 non-root package entries, including platform-specific optional packages;
-- Linux `npm ci`: 610 packages installed / 611 packages audited including the project root;
-- full npm audit: 1 total (`0 critical`, `0 high`, `0 moderate`, `1 low`);
-- runtime audit gate: no High or Critical findings;
+- Linux `npm ci`: 537 packages installed / 538 packages audited including the project root;
+- full npm audit: `0` vulnerabilities;
+- runtime npm audit: `0` vulnerabilities, enforced from Low severity upward;
+- ratcheting development audit baseline: `0 critical`, `0 high`, `0 moderate`, `0 low`, `0 total`;
+- GPL-compatible runtime license traversal: 75 reachable packages;
 - Composer advisories: `0`.
 
-The previous WordPress meta-tooling baseline was 32 npm findings (`10 high`, `21 moderate`, `1 low`). The focused toolchain removes all High and Moderate findings from that graph.
+The dependency-hardening work reduced the earlier WordPress meta-tooling baseline from 32 npm findings (`10 high`, `21 moderate`, `1 low`) to zero without `npm audit fix --force`, dependency overrides, or legacy peer-resolution bypasses.
 
-The remaining Low finding is `GHSA-g7r4-m6w7-qqqr` in `esbuild@0.27.3`, concerning the esbuild development server on Windows. This repository does not use the esbuild development server, but the finding remains visible and ratcheted in `security/npm-audit-baseline.json` until the validated Vite/Vitest dependency line resolves it.
+The final Low advisory (`GHSA-g7r4-m6w7-qqqr`) was inherited through `@wordpress/components -> @wordpress/ui -> @wordpress/theme`, whose optional tooling peer kept `esbuild@0.27.x` in the npm graph. Production already consumes WordPress Components through the `wp-components` host handle, so installing a private npm copy was unnecessary. Removing that redundant local runtime dependency allowed the validated Vite line to resolve `esbuild@0.28.2`, which removes the advisory while preserving the production asset contract.
 
-`npm run security:audit:dev-baseline` is a blocking gate. It fails when:
+`security/npm-audit-baseline.json` now contains no allowed advisories. `npm run security:audit:dev-baseline` therefore fails if any advisory of any severity appears. The baseline remains ratcheting: dependency debt may decrease, but it cannot be silently reintroduced.
 
-- a new advisory ID appears;
-- an existing advisory becomes more severe than reviewed;
-- any severity count exceeds the reviewed ceiling;
-- any Critical advisory exists; or
-- a reviewed advisory disappears without the baseline being reduced in the same change.
-
-That last rule makes the baseline ratcheting: once dependency debt is removed, the repository must record the improvement and may not silently reintroduce it later.
-
-Runtime High/Critical findings and Composer advisories remain unconditional hard failures independent of the development baseline.
+Runtime npm findings at Low or above and Composer advisories are unconditional hard failures.
 
 ## Reviewed npm install scripts
 
-npm install-time lifecycle scripts are controlled through the project `allowScripts` policy and `.npmrc` enables `strict-allow-scripts=true`. The focused graph currently requires exactly four reviewed lifecycle-script packages:
+npm install-time lifecycle scripts are controlled through the project `allowScripts` policy and `.npmrc` enables `strict-allow-scripts=true`. The current graph requires exactly four reviewed lifecycle-script packages:
 
 - `@parcel/watcher@2.6.0`
 - `core-js@3.50.0`
-- `esbuild@0.27.3`
+- `esbuild@0.28.2`
 - `fsevents@2.3.3`
 
 `fsevents` is the macOS filesystem-watcher implementation. Approval is version-specific so a future native build change requires another review.
@@ -79,13 +72,16 @@ A dependency update that introduces a new install script or changes one of these
 - `@dnd-kit/modifiers`: `^9.0.0`
 - `@dnd-kit/sortable`: `^10.0.0`
 - `@wordpress/api-fetch`: `7.41.0`
-- `@wordpress/components`: `36.1.0`
 - `@wordpress/data`: `10.50.0`
 - `@wordpress/element`: `8.2.0`
 - `@wordpress/i18n`: `6.23.0`
 - `@wordpress/icons`: `15.1.0`
 
-The WordPress JavaScript packages are externalized by the dependency-extraction plugin and represented by WordPress script handles in `build/*.asset.php`; they are not bundled as duplicate WordPress framework copies.
+`@wordpress/components` is intentionally not installed as an npm runtime dependency. Source imports are externalized to WordPress's `wp-components` script handle by the dependency-extraction plugin. Vitest resolves that host contract through the small adapter in `tests/js/wordpress-host/components.jsx` rather than reinstalling the entire Components dependency graph.
+
+`@wordpress/compose`, `@wordpress/hooks`, and `@wordpress/url` are also WordPress host imports in source code. The production build externalizes them to WordPress handles; Vitest uses explicit host adapters so tests do not depend on accidental transitive npm installation.
+
+`@wordpress/icons` is different: the dependency-extraction plugin does not externalize the icons package in this build, so it remains an explicit npm dependency and is bundled where needed.
 
 ## Direct npm development dependency groups
 
@@ -124,6 +120,17 @@ The WordPress JavaScript packages are externalized by the dependency-extraction 
 
 React remains a development/test dependency because the plugin build externalizes the WordPress/React runtime instead of shipping a private React copy.
 
+## WordPress host adapters in tests
+
+Vitest aliases only the WordPress packages that are intentionally host-provided and not guaranteed to exist in the npm graph:
+
+- `@wordpress/components`
+- `@wordpress/compose`
+- `@wordpress/hooks`
+- `@wordpress/url`
+
+The adapters are deliberately small and test-only. They provide enough contract surface for module resolution and existing component tests; individual tests can still replace behavior with `vi.mock(...)`. Installed WordPress packages such as `@wordpress/element`, `@wordpress/i18n`, `@wordpress/api-fetch`, `@wordpress/data`, and `@wordpress/icons` continue to use their real npm modules in tests.
+
 ## License policy
 
 The repository and plugin are `GPL-2.0-or-later`. `package.json` records that license explicitly.
@@ -136,7 +143,7 @@ New runtime dependencies must therefore be both technically justified and licens
 
 ## Build-contract validation
 
-The focused toolchain has been compared against the previous production build. It preserves the WordPress dependency handles in the primary asset manifests. For example, `build/admin.asset.php` continues to declare:
+The zero-advisory graph preserves the production build output and WordPress dependency handles. `build/admin.asset.php` continues to declare:
 
 - `react`
 - `react-dom`
@@ -147,14 +154,14 @@ The focused toolchain has been compared against the previous production build. I
 - `wp-i18n`
 - `wp-primitives`
 
-Current primary JavaScript sizes are:
+Current primary JavaScript sizes remain:
 
 - `build/admin.js`: 90,629 bytes;
 - `build/editor.js`: 13,894 bytes;
 - `build/shared.js`: 15,990 bytes;
 - primary total: 120,513 bytes.
 
-All remain below the repository's existing bundle budgets. Generated CSS, RTL CSS, and `*.asset.php` files are committed together with the toolchain change so source and distributable assets stay synchronized.
+All remain below the repository's existing bundle budgets. `editor.asset.php` and `shared.asset.php` also retain their existing WordPress handles, so removing the redundant npm Components copy does not change the WordPress runtime contract.
 
 ## CI and release gates
 
@@ -163,8 +170,8 @@ The permanent pipeline validates:
 - deterministic `npm ci` with strict engine and install-script enforcement;
 - Node.js/npm engine compatibility;
 - exact reviewed install-script coverage;
-- runtime npm security audit as a hard gate;
-- the ratcheting full-development npm advisory baseline as a hard gate;
+- zero runtime npm advisories from Low severity upward;
+- zero full-development npm advisories through the ratcheting baseline;
 - GPL-compatible reachable production npm dependency licenses;
 - JavaScript tests and production build;
 - PHP tests and `composer audit --locked`;
@@ -196,6 +203,7 @@ GitHub Dependency Review requires the repository Dependency Graph. If that repos
 npm ci
 npm run check:engines
 npm run security:install-scripts
+npm run security:audit
 npm run security:audit:runtime
 npm run security:audit:dev-baseline
 npm run check:licenses
@@ -215,4 +223,4 @@ composer audit --locked
 composer outdated --direct
 ```
 
-For investigation, `npm run security:audit` prints the raw full audit report. Security findings must be resolved through the dependency path that introduces them. Overrides require written justification, a narrowly scoped version range, and a clear removal condition.
+Security findings must be resolved through the dependency path that introduces them. Overrides require written justification, a narrowly scoped version range, and a clear removal condition; the current graph requires no security override.

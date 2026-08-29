@@ -36,6 +36,7 @@ Before opening or updating a pull request, run:
 ```bash
 npm run check:engines
 npm run security:install-scripts
+npm run security:audit
 npm run security:audit:runtime
 npm run security:audit:dev-baseline
 npm run check:licenses
@@ -48,11 +49,11 @@ composer test
 composer audit --locked
 ```
 
-The development dependency audit is governed by the reviewed ratcheting baseline in `security/npm-audit-baseline.json`. A dependency change must not introduce a new advisory, increase an advisory's severity, exceed the reviewed vulnerability counts, or retain a baseline entry after that advisory has been removed. When an update fixes dependency debt, reduce the baseline in the same pull request.
+The development dependency audit is governed by the ratcheting baseline in `security/npm-audit-baseline.json`. Its current ceiling is zero at every severity. A dependency change must not introduce any advisory or broaden the baseline. If an external advisory begins affecting the locked graph, resolve or explicitly review the dependency path rather than silently weakening the gate.
 
-Use `npm run security:audit` when investigating the raw audit graph. Runtime High/Critical findings and Composer advisories are always blocking regardless of the development baseline.
+Runtime npm advisories from Low severity upward and Composer advisories are blocking. Do not use forced audit fixes, broad overrides, or legacy peer-resolution flags to make findings disappear.
 
-Generated build files that are intentionally tracked must be updated together with their source changes. See [docs/dependencies.md](docs/dependencies.md) for the dependency, install-script, license, audit-baseline, and major-upgrade policy.
+Generated build files that are intentionally tracked must be updated together with their source changes. See [docs/dependencies.md](docs/dependencies.md) for the dependency, install-script, license, host-module, audit-baseline, and major-upgrade policy.
 
 ## Pull requests
 
