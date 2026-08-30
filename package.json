@@ -40,7 +40,7 @@
 		"@wordpress/browserslist-config": "^6.54.0",
 		"@wordpress/dependency-extraction-webpack-plugin": "^6.54.0",
 		"@wordpress/postcss-plugins-preset": "^5.54.0",
-		"babel-loader": "^9.2.1",
+		"babel-loader": "^10.1.1",
 		"browserslist": "^4.28.4",
 		"css-loader": "^7.1.5",
 		"cssnano": "^9.0.1",
