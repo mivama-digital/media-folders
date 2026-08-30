@@ -61,9 +61,12 @@ define( 'VMFO_PATH', __DIR__ . '/' );
 define( 'VMFO_URL', plugin_dir_url( __FILE__ ) );
 
 /*
- * Load Composer autoloader.
+ * Load the plugin-owned runtime autoloader.
+ *
+ * Composer is used for development and installation metadata only; the
+ * distributed plugin does not require a third-party PHP runtime vendor tree.
  */
-require_once VMFO_PATH . 'vendor/autoload.php';
+require_once VMFO_PATH . 'autoload.php';
 
 /**
  * Activation hook – set the sidebar visible by default for the activating user.

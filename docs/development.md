@@ -29,6 +29,7 @@ npm run security:install-scripts
 npm run security:audit:runtime
 npm run security:audit:dev-baseline
 npm run check:licenses
+npm run check:php-runtime-autoload
 composer audit --locked
 
 # Start development build with watch
@@ -61,6 +62,7 @@ npm run security:audit
 npm run security:audit:runtime
 npm run security:audit:dev-baseline
 npm run check:licenses
+npm run check:php-runtime-autoload
 composer audit --locked
 npm run build
 npm run check:release-version
@@ -75,6 +77,7 @@ Vitest does not require a private npm copy of WordPress Components. `vitest.conf
 
 ```
 media-folders/
+├── autoload.php             # Vendor-free PHP runtime autoloader
 ├── build/                  # Compiled assets (generated and tracked)
 ├── docs/                   # Documentation
 │   ├── a11y.md            # Accessibility documentation
@@ -377,7 +380,7 @@ The `i18n-map.json` file maps source files to their compiled outputs for proper 
 
 ## Creating a Distribution
 
-GitHub Releases are the canonical distribution path. The release workflow re-runs tests and security checks, validates that the release tag matches all plugin version metadata, enforces bundle budgets, installs production Composer dependencies, generates runtime SBOMs, builds the canonical ZIP from `.distignore`, and publishes SHA-256 checksums for all release artifacts.
+GitHub Releases are the canonical distribution path. The release workflow re-runs tests and security checks, validates that the release tag matches all plugin version metadata, enforces bundle budgets, verifies the vendor-free PHP runtime, generates runtime SBOMs, builds the canonical ZIP from `.distignore`, and publishes SHA-256 checksums for all release artifacts. The WordPress ZIP does not ship a Composer `vendor/` tree.
 
 For a local packaging smoke test, run the same validation gates and canonical packager:
 
@@ -397,11 +400,11 @@ composer validate --strict
 composer install --prefer-dist --no-interaction --no-progress
 composer test
 composer audit --locked
-composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+npm run check:php-runtime-autoload
 npm run package:zip
 ```
 
-`npm run package:zip` verifies required runtime files, rejects known development-only paths, and tests the resulting archive before reporting success. Do not hand-maintain a second release exclusion list; `.distignore` is the canonical distribution policy for both the GitHub ZIP and WordPress.org trunk deployment.
+`npm run package:zip` requires the plugin-owned `autoload.php`, rejects `vendor/` and Composer package-manager metadata, verifies required runtime files, and tests the resulting archive before reporting success. Do not hand-maintain a second release exclusion list; `.distignore` is the canonical distribution policy for both the GitHub ZIP and WordPress.org trunk deployment.
 
 WordPress.org deployment is a separate, explicit manual workflow. It pins the existing `virtual-media-folders` SVN slug, derives the SVN version from the selected release tag, and defaults to dry-run mode. A Git tag alone never performs a WordPress.org commit.
 

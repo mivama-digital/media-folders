@@ -16,14 +16,16 @@ coverage/
 *.zip
 *.cdx.json
 
-# Build tools and configs
+# Build tools and package-manager metadata
 node_modules
+vendor/
 package.json
 package-lock.json
+composer.json
+composer.lock
 webpack.config.js
 vitest.config.js
 phpunit.xml.dist
-composer.lock
 phpcs.xml
 phpcs.xml.dist
 i18n-map.json
@@ -46,20 +48,6 @@ CHANGELOG.md
 CONTRIBUTING.md
 SECURITY.md
 UPSTREAM.md
-
-# Composer dev dependencies
-vendor/phpunit/
-vendor/brain/
-vendor/mockery/
-vendor/sebastian/
-vendor/antecedent/
-vendor/hamcrest/
-vendor/myclabs/
-vendor/nikic/
-vendor/phar-io/
-vendor/staabm/
-vendor/theseer/
-vendor/bin/
 
 # This file
 .distignore

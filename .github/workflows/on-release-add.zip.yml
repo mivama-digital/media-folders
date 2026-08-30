@@ -53,6 +53,7 @@ jobs:
         run: |
           composer validate --strict
           composer install --prefer-dist --no-interaction --no-progress
+          npm run check:php-runtime-autoload
           composer test
           composer audit --locked
 
@@ -61,10 +62,13 @@ jobs:
           npm run --silent sbom:npm > virtual-media-folders-npm.cdx.json
           npm run --silent sbom:composer > virtual-media-folders-composer.cdx.json
           node -e "JSON.parse(require('fs').readFileSync('virtual-media-folders-npm.cdx.json', 'utf8'))"
-          node -e "JSON.parse(require('fs').readFileSync('virtual-media-folders-composer.cdx.json', 'utf8'))"
-
-      - name: Install production PHP dependencies
-        run: composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+          node - <<'NODE'
+          const fs = require('fs');
+          const sbom = JSON.parse(fs.readFileSync('virtual-media-folders-composer.cdx.json', 'utf8'));
+          if ((sbom.components ?? []).length !== 0) {
+            throw new Error(`Expected vendor-free PHP runtime SBOM, found ${(sbom.components ?? []).length} components.`);
+          }
+          NODE
 
       - name: Build release archive
         run: npm run package:zip

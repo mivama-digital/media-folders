@@ -20,6 +20,7 @@
 		"security:install-scripts": "node scripts/check-install-script-policy.mjs",
 		"check:engines": "node scripts/check-engines.mjs",
 		"check:licenses": "node scripts/check-licenses.mjs",
+		"check:php-runtime-autoload": "php scripts/check-runtime-autoload.php",
 		"check:bundle-budget": "node scripts/check-bundle-budget.mjs",
 		"check:release-version": "node scripts/check-release-version.mjs",
 		"package:zip": "bash scripts/build-release-zip.sh",

@@ -20,7 +20,7 @@ rsync -a \
 	"${ROOT_DIR}/" \
 	"${STAGING_DIR}/${PLUGIN_SLUG}/"
 
-for required in virtual-media-folders.php readme.txt LICENSE build/admin.js vendor/autoload.php; do
+for required in virtual-media-folders.php autoload.php readme.txt LICENSE build/admin.js; do
 	if [[ ! -f "${STAGING_DIR}/${PLUGIN_SLUG}/${required}" ]]; then
 		echo "Required release file is missing: ${required}" >&2
 		exit 1
@@ -31,12 +31,14 @@ for forbidden in \
 	.github \
 	.npmrc \
 	node_modules \
+	vendor \
 	tests \
 	security \
 	scripts \
 	docs \
 	package.json \
 	package-lock.json \
+	composer.json \
 	composer.lock \
 	phpunit.xml.dist \
 	webpack.config.js \
@@ -62,4 +64,14 @@ if ! unzip -Z1 "${OUTPUT_PATH}" | grep -qx "${PLUGIN_SLUG}/virtual-media-folders
 	exit 1
 fi
 
-echo "Built ${OUTPUT_NAME} from .distignore policy."
+if ! unzip -Z1 "${OUTPUT_PATH}" | grep -qx "${PLUGIN_SLUG}/autoload.php"; then
+	echo "Release archive does not contain the plugin runtime autoloader." >&2
+	exit 1
+fi
+
+if unzip -Z1 "${OUTPUT_PATH}" | grep -q "^${PLUGIN_SLUG}/vendor/"; then
+	echo "Release archive unexpectedly contains a Composer vendor tree." >&2
+	exit 1
+fi
+
+echo "Built ${OUTPUT_NAME} from .distignore policy with a vendor-free PHP runtime."

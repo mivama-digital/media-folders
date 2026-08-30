@@ -4,7 +4,17 @@ const composer = JSON.parse(fs.readFileSync('composer.json', 'utf8'));
 const lock = JSON.parse(fs.readFileSync('composer.lock', 'utf8'));
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
-const runtimePackages = lock.packages || [];
+// composer/installers is required to preserve the wordpress-plugin installation
+// contract for Composer/VCS consumers, but it is installation tooling rather than
+// executable plugin runtime code and is deliberately excluded from the WordPress
+// distribution archive.
+const installationOnlyPackages = new Set([
+	'composer/installers',
+]);
+
+const runtimePackages = (lock.packages || []).filter(
+	(entry) => !installationOnlyPackages.has(entry.name)
+);
 const refs = new Map(runtimePackages.map((entry) => [entry.name, `pkg:composer/${entry.name}@${entry.version}`]));
 const rootRef = `pkg:composer/${composer.name}@${pkg.version}`;
 
@@ -48,6 +58,12 @@ const sbom = {
 			version: pkg.version,
 			purl: rootRef,
 		},
+		properties: [
+			{
+				name: 'mivama:php-runtime-vendor-policy',
+				value: 'vendor-free; composer/installers is installation-only and excluded from distribution',
+			},
+		],
 	},
 	components,
 	dependencies,
