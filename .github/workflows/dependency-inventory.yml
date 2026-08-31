@@ -25,10 +25,10 @@ jobs:
 
       - name: Inventory npm direct dependencies
         run: |
-          echo '=== npm outdated (direct dependencies) ==='
+          npm ci
+          echo '=== npm outdated (installed direct dependencies) ==='
           npm outdated --json --long || true
           echo '=== selected resolved tooling ==='
-          npm ci
           npm ls --depth=0 || true
 
       - name: Set up PHP
@@ -40,6 +40,7 @@ jobs:
 
       - name: Inventory Composer direct dependencies
         run: |
+          composer install --no-interaction --prefer-dist
           echo '=== composer outdated --direct ==='
           composer outdated --direct --format=json || true
           echo '=== composer audit ==='
