@@ -23,6 +23,7 @@
 		"check:php-runtime-autoload": "php scripts/check-runtime-autoload.php",
 		"check:bundle-budget": "node scripts/check-bundle-budget.mjs",
 		"check:release-version": "node scripts/check-release-version.mjs",
+		"release:notes": "node scripts/extract-release-notes.mjs",
 		"package:zip": "bash scripts/build-release-zip.sh",
 		"sbom:npm": "npm sbom --omit=dev --sbom-format=cyclonedx --sbom-type=application",
 		"sbom:composer": "node scripts/generate-composer-sbom.mjs",

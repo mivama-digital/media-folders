@@ -93,6 +93,12 @@ jobs:
       - name: Verify release version consistency
         run: npm run check:release-version
 
+      - name: Validate release notes extraction
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          npm run --silent release:notes -- "${version}" > /tmp/release-notes.md
+          test -s /tmp/release-notes.md
+
       - name: Verify bundle budgets
         run: npm run check:bundle-budget
 

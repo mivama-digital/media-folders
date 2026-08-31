@@ -1,11 +1,21 @@
-name: Build release ZIP
+name: Publish GitHub release
 
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type PUBLISH to validate and publish the prepared version from main
+        required: true
+        type: string
 
 permissions:
   contents: write
+
+concurrency:
+  group: github-release-${{ github.event_name == 'release' && github.event.release.tag_name || github.ref }}
+  cancel-in-progress: false
 
 env:
   NODE_VERSION: '24'
@@ -13,13 +23,15 @@ env:
 
 jobs:
   build:
-    name: Validate and build release ZIP
+    name: Validate, build and publish release
+    if: ${{ github.event_name == 'release' || (github.ref == 'refs/heads/main' && inputs.confirm == 'PUBLISH') }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout release tag
+      - name: Checkout release source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -34,9 +46,41 @@ jobs:
           coverage: none
           tools: composer:v2
 
+      - name: Resolve release version and tag
+        id: release
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          tag="v${version}"
+
+          if [ "${EVENT_NAME}" = "release" ]; then
+            tag="${EVENT_RELEASE_TAG}"
+          fi
+
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+
+      - name: Reject an existing manual release target
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            echo "Release ${RELEASE_TAG} already exists; refusing to overwrite it." >&2
+            exit 1
+          fi
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
+            echo "Tag ${RELEASE_TAG} already exists; refusing to move or reuse it from the automated publish path." >&2
+            exit 1
+          fi
+
       - name: Test, audit and build JavaScript
         env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
         run: |
           npm ci
           npm run check:engines
@@ -48,6 +92,11 @@ jobs:
           npm run build
           npm run check:release-version
           npm run check:bundle-budget
+
+      - name: Generate release notes from changelog
+        run: |
+          npm run --silent release:notes -- "${{ steps.release.outputs.version }}" > release-notes.md
+          test -s release-notes.md
 
       - name: Test and audit PHP
         run: |
@@ -82,7 +131,8 @@ jobs:
             > SHA256SUMS
           sha256sum --check SHA256SUMS
 
-      - name: Attach ZIP, SBOMs and checksums to release
+      - name: Attach assets to an externally published release
+        if: ${{ github.event_name == 'release' }}
         uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -92,4 +142,22 @@ jobs:
             virtual-media-folders-npm.cdx.json
             virtual-media-folders-composer.cdx.json
             SHA256SUMS
-          tag_name: ${{ github.event.release.tag_name }}
+          tag_name: ${{ steps.release.outputs.tag }}
+          fail_on_unmatched_files: true
+
+      - name: Publish validated GitHub release
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          gh release create "${RELEASE_TAG}" \
+            virtual-media-folders.zip \
+            virtual-media-folders-npm.cdx.json \
+            virtual-media-folders-composer.cdx.json \
+            SHA256SUMS \
+            --target "${GITHUB_SHA}" \
+            --title "Virtual Media Folders ${RELEASE_VERSION}" \
+            --notes-file release-notes.md \
+            --latest
