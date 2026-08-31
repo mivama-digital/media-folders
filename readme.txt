@@ -3,7 +3,7 @@ Contributors: PerS
 Tags: media, ai, organization, media library, folders
 Requires at least: 6.8
 Tested up to: 7.1
-Stable tag: 2.1.5
+Stable tag: 2.1.6
 Requires PHP: 8.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -76,10 +76,10 @@ When inserting media from a block (Image, Gallery, etc.):
 
 = Documentation =
 
-* [Accessibility](https://github.com/soderlind/virtual-media-folders/blob/main/docs/a11y.md) – Keyboard navigation and screen reader support
-* [Development](https://github.com/soderlind/virtual-media-folders/blob/main/docs/development.md) – Setup, API reference, hooks, and contributing
+* [Accessibility](https://github.com/mivama-digital/media-folders/blob/main/docs/a11y.md) – Keyboard navigation and screen reader support
+* [Development](https://github.com/mivama-digital/media-folders/blob/main/docs/development.md) – Setup, API reference, hooks, and contributing
 * [MCP Integration](https://github.com/soderlind/vmfa-ai-ability/blob/main/docs/mcp.md) – MCP client configuration, upload flow, and AI agent usage using the [AI Ability](https://github.com/soderlind/vmfa-ai-ability) add-on
-* [Add-on Development](https://github.com/soderlind/virtual-media-folders/blob/main/docs/addon-development.md) – Guide to building add-on plugins
+* [Add-on Development](https://github.com/mivama-digital/media-folders/blob/main/docs/addon-development.md) – Guide to building add-on plugins
 
 
 == Installation ==
@@ -125,11 +125,18 @@ Virtual Media Folders works entirely within the WordPress admin. It doesn't affe
 
 = Does this .. ? =
 
-If you are missing a feature and the [add-ons](https://github.com/soderlind/vmfa/) don't cover it, please [open a feature request](https://github.com/soderlind/virtual-media-folders/issues/new) :)
+If you are missing a feature and the [add-ons](https://github.com/soderlind/vmfa/) don't cover it, please [open a feature request](https://github.com/mivama-digital/media-folders/issues/new) :)
 
 The [Migrate](https://github.com/soderlind/vmfa-migrate) add-on was created in response to a user request for migration from Enhanced Media Library, but it also supports FileBird, Real Media Library, HappyFiles, WP Media Folder, Media Library Assistant, and CatFolders.
 
 == Changelog ==
+
+= 2.1.6 =
+* Security: Hardened the JavaScript and Composer supply chain to a zero-advisory baseline without force-fixes or peer-resolution bypasses.
+* Changed: Replaced the broad `@wordpress/scripts` meta-toolchain with the focused build/test dependencies actually used by the plugin.
+* Changed: Updated the supported WordPress runtime package set, PHPUnit 12, Webpack CLI 7, babel-loader 10, and the Vite 8 test stack while retaining the validated React 18 host contract.
+* Distribution: The plugin ZIP now uses the plugin-owned PHP autoloader and ships without a Composer `vendor/` tree; release CI validates SBOMs, SHA-256 checksums, bundle budgets, and required files.
+* Documentation: Updated maintained-repository links and release instructions for the Mivama distribution.
 
 = 2.1.5 =
 * Added: Block inserter "Media" tab now lists your top-level virtual folders as image sources, so you can insert images straight from a folder alongside Images and Openverse.
@@ -267,7 +274,7 @@ The [Migrate](https://github.com/soderlind/vmfa-migrate) add-on was created in r
 
 = 1.6.1 =
 * Changed: Add-on tabs are now sorted alphabetically by title in the settings page
-* Documentation: Added comprehensive [Add-on Development Guide](https://github.com/soderlind/virtual-media-folders/blob/main/docs/addon-development.md) with philosophy, architecture, and implementation details
+* Documentation: Added comprehensive [Add-on Development Guide](https://github.com/mivama-digital/media-folders/blob/main/docs/addon-development.md) with philosophy, architecture, and implementation details
 
 = 1.6.0 =
 * Added: Add-on Tab System - Settings page now supports tabs for add-on plugins

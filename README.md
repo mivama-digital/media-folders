@@ -25,10 +25,14 @@ This repository is the **Mivama Digital maintained distribution** of Virtual Med
 
 ### Mivama release
 
+When a Mivama release is published:
+
 1. Open the [Mivama releases](https://github.com/mivama-digital/media-folders/releases) page.
 2. Download the `virtual-media-folders.zip` asset from the desired release.
 3. In WordPress, go to **Plugins > Add New > Upload Plugin**.
 4. Upload the ZIP and activate the plugin.
+
+Until the first Mivama release is published, treat `main` as development source rather than a stable binary distribution.
 
 The original project is also published at [WordPress.org](https://wordpress.org/plugins/virtual-media-folders/). The Mivama repository does not treat that listing as its deployment target unless WordPress.org release ownership and credentials are explicitly configured for Mivama.
 
@@ -44,7 +48,7 @@ The original project is also published at [WordPress.org](https://wordpress.org/
 
 ### Settings
 
-Go to **Media > Folder Settings** to configure sidebar visibility, uncategorized media, move behavior, and the default upload folder.
+Go to **Media > VMF Settings** to configure sidebar visibility, uncategorized media, move behavior, and the default upload folder.
 
 ## Development
 
@@ -89,13 +93,21 @@ Release policy:
 - WordPress.org deployment is a separate, explicit operation and is not triggered by every Git tag;
 - the WordPress.org deployment workflow defaults to dry-run mode so SVN behavior can be checked before a real commit.
 
-To build the same release archive locally after producing assets and installing production PHP dependencies:
+To validate and build the same vendor-free release archive locally:
 
 ```bash
+npm ci
+composer install --prefer-dist --no-interaction --no-progress
+npm test -- --run
+composer test
 npm run build
-composer install --no-dev --prefer-dist --optimize-autoloader
+npm run check:release-version
+npm run check:bundle-budget
+npm run check:php-runtime-autoload
 npm run package:zip
 ```
+
+The distributable ZIP intentionally excludes Composer package-manager metadata and `vendor/`; Composer remains a development/test dependency only. See [docs/development.md](docs/development.md) for the complete release smoke-test sequence.
 
 ## Documentation
 

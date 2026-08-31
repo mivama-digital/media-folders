@@ -71,7 +71,7 @@ npm run check:bundle-budget
 
 The full development and runtime npm audits are expected to contain zero advisories. `security/npm-audit-baseline.json` has zero allowed findings at every severity, so any newly reported advisory is blocking.
 
-Vitest does not require a private npm copy of WordPress Components. `vitest.config.js` aliases host-provided WordPress modules that are intentionally absent from the local dependency graph to small adapters under `tests/js/wordpress-host/`. This keeps tests deterministic without pulling WordPress host framework trees into npm solely for module resolution.
+Vitest does not require a private npm copy of WordPress Components. `vitest.config.mjs` aliases host-provided WordPress modules that are intentionally absent from the local dependency graph to small adapters under `tests/js/wordpress-host/`. This keeps tests deterministic without pulling WordPress host framework trees into npm solely for module resolution.
 
 ## Project Structure
 

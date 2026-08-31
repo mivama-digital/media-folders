@@ -5,6 +5,26 @@ All notable changes to Virtual Media Folders will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.6] - 2026-08-31
+
+### Security
+
+- Hardened the JavaScript and Composer supply chain to a zero-advisory baseline without `--force`, `--legacy-peer-deps`, or dependency overrides.
+- Enforced exact install-script approvals, GPL-compatible runtime-license validation, and blocking npm/Composer security gates.
+
+### Changed
+
+- Replaced the broad `@wordpress/scripts` meta-package with the focused Webpack/Babel/PostCSS/Vitest toolchain actually used by the plugin.
+- Updated the directly pinned WordPress runtime packages to their current compatible same-major releases.
+- Upgraded PHPUnit to 12, Webpack CLI to 7, babel-loader to 10, the CSS toolchain majors, and the Vite React adapter to Vite 8 while retaining the validated React 18 WordPress host contract.
+- Updated maintained-repository documentation links and release instructions for the Mivama distribution.
+
+### Distribution
+
+- Switched the shipped PHP runtime to the plugin-owned autoloader and removed the Composer `vendor/` tree from the WordPress distribution ZIP.
+- Added runtime CycloneDX SBOM validation, SHA-256 checksums, version consistency checks, bundle budgets, and required-file validation to release CI.
+- Kept WordPress.org deployment manual, confirmation-gated, and dry-run by default.
+
 ## [2.1.5] - 2026-08-26
 
 ### Added
