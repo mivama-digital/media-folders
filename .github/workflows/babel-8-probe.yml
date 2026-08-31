@@ -1,0 +1,62 @@
+name: Validate Babel 8 migration
+
+on:
+  push:
+    branches:
+      - agent/babel-8
+    paths:
+      - '.github/workflows/babel-8-probe.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: agent/babel-8
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Upgrade Babel core major
+        run: |
+          npm install --save-dev '@babel/core@^8.0.1'
+          npm dedupe
+
+      - name: Validate Babel and WordPress preset contract
+        run: |
+          npm ls @babel/core babel-loader @wordpress/babel-preset-default @vitejs/plugin-react webpack
+          node -e "for (const name of ['@babel/core','babel-loader','@wordpress/babel-preset-default']) { const p=require('./node_modules/'+name+'/package.json'); console.log(name, 'version:', p.version, 'engines:', p.engines, 'peers:', p.peerDependencies); }"
+          npm run check:engines
+          npm run security:install-scripts
+          npm audit --audit-level=low
+          npm run security:audit:runtime
+          npm run security:audit:dev-baseline
+          npm run check:licenses
+          npm test -- --run
+          npm run build
+          npm run check:release-version
+          npm run check:bundle-budget
+          echo '=== WordPress asset manifests ==='
+          cat build/*.asset.php
+          npm run --silent sbom:npm > /tmp/npm-runtime.cdx.json
+          node -e "JSON.parse(require('fs').readFileSync('/tmp/npm-runtime.cdx.json', 'utf8'))"
+
+      - name: Commit validated Babel 8 migration
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package.json package-lock.json
+          if git diff --cached --quiet; then
+            echo 'No Babel 8 migration changes produced.'
+            exit 0
+          fi
+          git commit -m 'build: upgrade Babel core to 8'
+          git push origin HEAD:agent/babel-8
