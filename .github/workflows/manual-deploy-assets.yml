@@ -11,17 +11,21 @@ on:
 permissions:
   contents: read
 
+env:
+  WPORG_SLUG: virtual-media-folders
+
 jobs:
   update:
     if: ${{ inputs.confirm == 'DEPLOY' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Update WordPress.org plugin assets and readme
-        uses: 10up/action-wordpress-plugin-asset-update@stable
+        uses: 10up/action-wordpress-plugin-asset-update@2480306f6f693672726d08b5917ea114cb2825f7 # 2.2.0
         env:
+          SLUG: ${{ env.WPORG_SLUG }}
           IGNORE_OTHER_FILES: true
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}

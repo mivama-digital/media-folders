@@ -5,6 +5,9 @@ on:
   push:
     branches:
       - main
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -13,22 +16,73 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  NODE_VERSION: '24'
+  PHP_VERSION: '8.3'
+
 jobs:
-  javascript:
-    name: JavaScript tests and build
+  dependency-review:
+    name: Dependency review
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Detect Dependency Graph availability
+        id: dependency-graph
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          status="$(curl --silent --show-error --output /tmp/dependency-graph-sbom.json --write-out '%{http_code}' \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "Accept: application/vnd.github+json" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/dependency-graph/sbom")"
+
+          if [ "${status}" = "200" ]; then
+            echo "enabled=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "enabled=false" >> "${GITHUB_OUTPUT}"
+            echo "::warning::GitHub Dependency Graph is unavailable (HTTP ${status}). Enable it in repository Code security settings to activate the blocking Dependency Review gate."
+          fi
+
+      - name: Review dependency changes
+        if: ${{ steps.dependency-graph.outputs.enabled == 'true' }}
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+
+  javascript:
+    name: JavaScript tests, security and build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: Install JavaScript dependencies
         run: npm ci
+
+      - name: Verify Node.js and npm engines
+        run: npm run check:engines
+
+      - name: Verify install-script policy
+        run: npm run security:install-scripts
+
+      - name: Audit runtime dependencies
+        run: npm run security:audit:runtime
+
+      - name: Validate development dependency audit baseline
+        run: npm run security:audit:dev-baseline
+
+      - name: Validate GPLv2-compatible runtime licenses
+        run: npm run check:licenses
 
       - name: Run JavaScript tests
         run: npm test -- --run
@@ -36,28 +90,56 @@ jobs:
       - name: Build production assets
         run: npm run build
 
+      - name: Verify release version consistency
+        run: npm run check:release-version
+
+      - name: Verify bundle budgets
+        run: npm run check:bundle-budget
+
+      - name: Validate npm runtime SBOM generation
+        run: |
+          npm run --silent sbom:npm > /tmp/npm-runtime.cdx.json
+          node -e "JSON.parse(require('fs').readFileSync('/tmp/npm-runtime.cdx.json', 'utf8'))"
+
+      - name: Validate shipped PHP runtime SBOM generation
+        run: |
+          npm run --silent sbom:composer > /tmp/composer-runtime.cdx.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const sbom = JSON.parse(fs.readFileSync('/tmp/composer-runtime.cdx.json', 'utf8'));
+          if ((sbom.components ?? []).length !== 0) {
+            throw new Error(`Expected vendor-free PHP runtime SBOM, found ${(sbom.components ?? []).length} components.`);
+          }
+          NODE
+
   php:
-    name: PHP tests
+    name: PHP tests and security
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
-          php-version: '8.3'
+          php-version: ${{ env.PHP_VERSION }}
           coverage: none
           tools: composer:v2
 
       - name: Validate Composer metadata
         run: composer validate --strict
 
-      - name: Install PHP dependencies
+      - name: Install PHP development dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Verify vendor-free plugin runtime autoload
+        run: npm run check:php-runtime-autoload
 
       - name: Run PHP tests
         run: composer test
+
+      - name: Audit locked Composer dependencies
+        run: composer audit --locked
 
   release-build:
     name: Validate distributable build
@@ -67,33 +149,69 @@ jobs:
       - php
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
-          php-version: '8.3'
+          php-version: ${{ env.PHP_VERSION }}
           coverage: none
           tools: composer:v2
 
-      - name: Build assets
+      - name: Build and verify JavaScript assets
         run: |
           npm ci
+          npm run check:engines
+          npm run security:install-scripts
+          npm run security:audit:runtime
+          npm run security:audit:dev-baseline
+          npm run check:licenses
           npm run build
+          npm run check:release-version
+          npm run check:bundle-budget
 
-      - name: Install production PHP dependencies
-        run: composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+      - name: Verify vendor-free PHP runtime
+        run: npm run check:php-runtime-autoload
+
+      - name: Generate and validate runtime SBOMs
+        run: |
+          npm run --silent sbom:npm > npm-runtime.cdx.json
+          npm run --silent sbom:composer > composer-runtime.cdx.json
+          node -e "JSON.parse(require('fs').readFileSync('npm-runtime.cdx.json', 'utf8'))"
+          node - <<'NODE'
+          const fs = require('fs');
+          const sbom = JSON.parse(fs.readFileSync('composer-runtime.cdx.json', 'utf8'));
+          if ((sbom.components ?? []).length !== 0) {
+            throw new Error(`Expected vendor-free PHP runtime SBOM, found ${(sbom.components ?? []).length} components.`);
+          }
+          NODE
+
+      - name: Audit locked Composer dependencies
+        run: composer audit --locked
+
+      - name: Build and validate release archive
+        run: npm run package:zip
+
+      - name: Generate and verify release checksums
+        run: |
+          sha256sum virtual-media-folders.zip npm-runtime.cdx.json composer-runtime.cdx.json > SHA256SUMS
+          sha256sum --check SHA256SUMS
 
       - name: Verify required distribution files
         run: |
           test -f virtual-media-folders.php
+          test -f autoload.php
           test -f readme.txt
           test -f LICENSE
-          test -f vendor/autoload.php
+          test ! -e vendor
           test -f build/admin.js
+          test -f npm-runtime.cdx.json
+          test -f composer-runtime.cdx.json
+          test -f virtual-media-folders.zip
+          test -f SHA256SUMS

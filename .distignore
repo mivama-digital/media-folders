@@ -10,16 +10,22 @@
 # Development files
 .phpunit.cache
 .editorconfig
+.npmrc
 .DS_Store
+coverage/
+*.zip
+*.cdx.json
 
-# Build tools and configs
+# Build tools and package-manager metadata
 node_modules
+vendor/
 package.json
 package-lock.json
+composer.json
+composer.lock
 webpack.config.js
 vitest.config.js
 phpunit.xml.dist
-composer.lock
 phpcs.xml
 phpcs.xml.dist
 i18n-map.json
@@ -29,29 +35,19 @@ src/admin/
 src/editor/
 src/shared/
 
-# Tests
+# Tests, security metadata, and maintenance scripts
 tests/
+security/
 scripts/
 
-# Documentation
-docs/
+# Internal documentation and repository governance
 assets/
+docs/
 README.md
 CHANGELOG.md
-
-# Composer dev dependencies
-vendor/phpunit/
-vendor/brain/
-vendor/mockery/
-vendor/sebastian/
-vendor/antecedent/
-vendor/hamcrest/
-vendor/myclabs/
-vendor/nikic/
-vendor/phar-io/
-vendor/staabm/
-vendor/theseer/
-vendor/bin/
+CONTRIBUTING.md
+SECURITY.md
+UPSTREAM.md
 
 # This file
 .distignore

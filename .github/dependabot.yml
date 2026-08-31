@@ -1,43 +1,100 @@
 version: 2
 updates:
-  # JavaScript / build toolchain
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
     groups:
-      npm-development:
-        dependency-type: "development"
+      wordpress-runtime:
+        dependency-type: "production"
+        patterns:
+          - "@wordpress/api-fetch"
+          - "@wordpress/data"
+          - "@wordpress/element"
+          - "@wordpress/i18n"
+          - "@wordpress/icons"
         update-types:
           - "minor"
           - "patch"
-      npm-production:
+      wordpress-toolchain:
+        dependency-type: "development"
+        patterns:
+          - "@wordpress/babel-preset-default"
+          - "@wordpress/browserslist-config"
+          - "@wordpress/dependency-extraction-webpack-plugin"
+          - "@wordpress/postcss-plugins-preset"
+        update-types:
+          - "minor"
+          - "patch"
+      dnd-runtime:
         dependency-type: "production"
+        patterns:
+          - "@dnd-kit/*"
+        update-types:
+          - "minor"
+          - "patch"
+      javascript-testing:
+        dependency-type: "development"
+        patterns:
+          - "@testing-library/*"
+          - "@vitejs/plugin-react"
+          - "jsdom"
+          - "vitest"
+        update-types:
+          - "minor"
+          - "patch"
+      react-host:
+        dependency-type: "development"
+        patterns:
+          - "react"
+          - "react-dom"
+        update-types:
+          - "minor"
+          - "patch"
+      build-toolchain:
+        dependency-type: "development"
+        patterns:
+          - "@babel/core"
+          - "babel-loader"
+          - "browserslist"
+          - "css-loader"
+          - "cssnano"
+          - "mini-css-extract-plugin"
+          - "postcss"
+          - "postcss-loader"
+          - "rtlcss"
+          - "sass-embedded"
+          - "sass-loader"
+          - "terser-webpack-plugin"
+          - "webpack"
+          - "webpack-cli"
         update-types:
           - "minor"
           - "patch"
 
-  # PHP / Composer
   - package-ecosystem: "composer"
     directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
     groups:
-      composer-all:
+      composer-minor-patch:
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
 
-  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 5
     groups:
-      github-actions:
+      github-actions-minor-patch:
         patterns:
           - "*"
+        update-types:
+          - "minor"
+          - "patch"

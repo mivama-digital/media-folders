@@ -7,75 +7,89 @@ on:
 permissions:
   contents: write
 
+env:
+  NODE_VERSION: '24'
+  PHP_VERSION: '8.3'
+
 jobs:
   build:
     name: Validate and build release ZIP
     runs-on: ubuntu-latest
     steps:
       - name: Checkout release tag
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.release.tag_name }}
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
-          php-version: '8.3'
+          php-version: ${{ env.PHP_VERSION }}
           coverage: none
           tools: composer:v2
 
-      - name: Test and build JavaScript
+      - name: Test, audit and build JavaScript
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           npm ci
+          npm run check:engines
+          npm run security:install-scripts
+          npm run security:audit:runtime
+          npm run security:audit:dev-baseline
+          npm run check:licenses
           npm test -- --run
           npm run build
+          npm run check:release-version
+          npm run check:bundle-budget
 
-      - name: Test PHP
+      - name: Test and audit PHP
         run: |
+          composer validate --strict
           composer install --prefer-dist --no-interaction --no-progress
+          npm run check:php-runtime-autoload
           composer test
+          composer audit --locked
 
-      - name: Install production PHP dependencies
-        run: composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+      - name: Generate runtime SBOMs
+        run: |
+          npm run --silent sbom:npm > virtual-media-folders-npm.cdx.json
+          npm run --silent sbom:composer > virtual-media-folders-composer.cdx.json
+          node -e "JSON.parse(require('fs').readFileSync('virtual-media-folders-npm.cdx.json', 'utf8'))"
+          node - <<'NODE'
+          const fs = require('fs');
+          const sbom = JSON.parse(fs.readFileSync('virtual-media-folders-composer.cdx.json', 'utf8'));
+          if ((sbom.components ?? []).length !== 0) {
+            throw new Error(`Expected vendor-free PHP runtime SBOM, found ${(sbom.components ?? []).length} components.`);
+          }
+          NODE
 
-      - name: Archive release
-        uses: thedoctor0/zip-release@b57d897cb5d60cb78b51a507f63fa184cfe35554
-        with:
-          type: zip
-          filename: virtual-media-folders.zip
-          exclusions: >-
-            *.git*
-            .github/*
-            .distignore
-            .editorconfig
-            .wordpress-org/*
-            assets/*
-            docs/*
-            tests/*
-            scripts/*
-            src/admin/*
-            src/editor/*
-            src/shared/*
-            *.md
-            package.json
-            package-lock.json
-            webpack.config.js
-            vitest.config.js
-            phpunit.xml.dist
-            composer.lock
-            phpcs.xml
-            i18n-map.json
+      - name: Build release archive
+        run: npm run package:zip
 
-      - name: Attach ZIP to release
+      - name: Generate release checksums
+        run: |
+          sha256sum \
+            virtual-media-folders.zip \
+            virtual-media-folders-npm.cdx.json \
+            virtual-media-folders-composer.cdx.json \
+            > SHA256SUMS
+          sha256sum --check SHA256SUMS
+
+      - name: Attach ZIP, SBOMs and checksums to release
         uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: virtual-media-folders.zip
+          files: |
+            virtual-media-folders.zip
+            virtual-media-folders-npm.cdx.json
+            virtual-media-folders-composer.cdx.json
+            SHA256SUMS
           tag_name: ${{ github.event.release.tag_name }}

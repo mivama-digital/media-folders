@@ -1,1 +1,1 @@
-(()=>{"use strict";var e={};(e=>{"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})})(e),(window.vmfo=window.vmfo||{})["admin-wp7"]=e})();
+(()=>{"use strict";let e={};(e=>{Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})})(e),(window.vmfo=window.vmfo||{})["admin-wp7"]=e})();

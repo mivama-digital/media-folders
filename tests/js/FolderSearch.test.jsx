@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import FolderSearch from '../../src/admin/components/FolderSearch';
 
@@ -11,9 +11,7 @@ import FolderSearch from '../../src/admin/components/FolderSearch';
 vi.mock('@wordpress/element', async () => {
 	const React = await import('react');
 	return {
-		useState: React.useState,
-		useRef: React.useRef,
-		useEffect: React.useEffect,
+		...React,
 		createPortal: (children) => children, // Don't use portal in tests
 	};
 });
@@ -22,14 +20,26 @@ vi.mock('@wordpress/i18n', () => ({
 	__: (str) => str,
 }));
 
-vi.mock('@wordpress/components', () => ({
-	Button: ({ children, onClick, icon, label, className, ...props }) => (
-		<button onClick={onClick} className={className} aria-label={label} {...props}>
-			{icon && <span data-testid="icon">{icon.name || 'icon'}</span>}
-			{children}
-		</button>
-	),
-}));
+vi.mock('@wordpress/components', async () => {
+	const React = await import('react');
+	return {
+		Button: React.forwardRef(({
+			children,
+			onClick,
+			icon,
+			label,
+			className,
+			showTooltip: _showTooltip,
+			size: _size,
+			...props
+		}, ref) => (
+			<button ref={ref} onClick={onClick} className={className} aria-label={label} {...props}>
+				{icon && <span data-testid="icon">{icon.name || 'icon'}</span>}
+				{children}
+			</button>
+		)),
+	};
+});
 
 vi.mock('@wordpress/icons', () => ({
 	search: { name: 'search' },
@@ -187,7 +197,6 @@ describe('FolderSearch (Admin)', () => {
 
 			await user.click(screen.getByRole('button', { name: 'Search folders' }));
 
-			// The input should have the aria-label
 			const input = screen.getByPlaceholderText('Search folders…');
 			expect(input).toHaveAttribute('aria-label', 'Search folders');
 		});

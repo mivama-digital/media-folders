@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "reviewedAt": "2026-08-29",
+  "maxCounts": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "allowedAdvisories": {}
+}

@@ -82,15 +82,27 @@ Mivama **continues the existing plugin version lineage** instead of resetting th
 Release policy:
 
 - semantic versions use `vX.Y.Z` Git tags;
-- GitHub releases produce `virtual-media-folders.zip`;
-- release builds must pass JavaScript tests, PHP tests, and the production build;
-- WordPress.org deployment is a separate, explicit operation and is not triggered by every Git tag.
+- GitHub releases produce `virtual-media-folders.zip` from the same `.distignore` policy used for WordPress.org packaging;
+- release builds must pass JavaScript tests, PHP tests, security gates, version consistency checks, bundle budgets, SBOM generation, and ZIP validation;
+- published GitHub releases attach npm and Composer runtime CycloneDX SBOMs plus `SHA256SUMS` for artifact verification;
+- WordPress.org uses the existing `virtual-media-folders` slug explicitly rather than deriving a slug from the GitHub repository name;
+- WordPress.org deployment is a separate, explicit operation and is not triggered by every Git tag;
+- the WordPress.org deployment workflow defaults to dry-run mode so SVN behavior can be checked before a real commit.
+
+To build the same release archive locally after producing assets and installing production PHP dependencies:
+
+```bash
+npm run build
+composer install --no-dev --prefer-dist --optimize-autoloader
+npm run package:zip
+```
 
 ## Documentation
 
 - [Documentation index](docs/README.md)
 - [Accessibility](docs/a11y.md)
 - [Development](docs/development.md)
+- [Dependencies and supply-chain baseline](docs/dependencies.md)
 - [Hooks](docs/hooks.md)
 - [Add-on development](docs/addon-development.md)
 - [Upstream relationship](UPSTREAM.md)

@@ -7,13 +7,23 @@ on:
         description: Git tag to deploy, for example v2.1.6
         required: true
         type: string
+      dry_run:
+        description: Validate the WordPress.org SVN deployment without committing changes
+        required: true
+        default: true
+        type: boolean
       confirm:
-        description: Type DEPLOY to confirm WordPress.org deployment
+        description: Type DEPLOY to confirm the WordPress.org deployment workflow
         required: true
         type: string
 
 permissions:
   contents: read
+
+env:
+  NODE_VERSION: '24'
+  PHP_VERSION: '8.3'
+  WPORG_SLUG: virtual-media-folders
 
 jobs:
   deploy:
@@ -21,39 +31,63 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout release tag
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.tag }}
 
+      - name: Resolve WordPress.org release version
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          version="${RELEASE_TAG#v}"
+          if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid release tag: ${RELEASE_TAG}" >&2
+            exit 1
+          fi
+          echo "WPORG_VERSION=${version}" >> "${GITHUB_ENV}"
+
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
-          php-version: '8.3'
+          php-version: ${{ env.PHP_VERSION }}
           coverage: none
           tools: composer:v2
 
-      - name: Validate JavaScript and build assets
+      - name: Validate JavaScript, security and build assets
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
           npm ci
+          npm run check:engines
+          npm run security:install-scripts
+          npm run security:audit:runtime
+          npm run security:audit:dev-baseline
+          npm run check:licenses
           npm test -- --run
           npm run build
+          npm run check:release-version
+          npm run check:bundle-budget
 
-      - name: Validate PHP
+      - name: Validate PHP and vendor-free runtime
         run: |
+          composer validate --strict
           composer install --prefer-dist --no-interaction --no-progress
+          npm run check:php-runtime-autoload
           composer test
-
-      - name: Install production PHP dependencies
-        run: composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+          composer audit --locked
 
       - name: Deploy to WordPress.org
-        uses: 10up/action-wordpress-plugin-deploy@stable
+        uses: 10up/action-wordpress-plugin-deploy@54bd289b8525fd23a5c365ec369185f2966529c2 # 2.3.0
+        with:
+          dry-run: ${{ inputs.dry_run }}
         env:
+          SLUG: ${{ env.WPORG_SLUG }}
+          VERSION: ${{ env.WPORG_VERSION }}
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
