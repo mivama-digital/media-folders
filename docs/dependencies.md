@@ -39,14 +39,16 @@ The repository uses a focused Webpack pipeline instead of the `@wordpress/script
 
 The repository does not run a Webpack development server. `npm run start` is a watch build.
 
-Validated Node.js 24.19.0 / npm 11.17.0 baseline:
+Validated Node.js 24.19.0 / npm 11.17.0 baseline after the 2026-08-31 refresh:
 
-- 537 packages installed;
-- 538 packages audited including the project root;
+- 502 dependency packages installed;
+- 503 packages audited including the project root;
 - full npm audit: `0` vulnerabilities;
 - runtime npm audit: `0` vulnerabilities, blocking from Low severity upward;
 - ratcheting audit baseline: `0 critical`, `0 high`, `0 moderate`, `0 low`, `0 total`;
-- GPL-compatible runtime license traversal: 75 reachable packages.
+- GPL-compatible runtime license traversal: 63 reachable packages;
+- JavaScript tests: 107 / 107 passing;
+- primary production JavaScript total: 120,513 bytes.
 
 The previous WordPress meta-tooling graph contained 32 npm findings (`10 high`, `21 moderate`, `1 low`). The focused graph reaches zero without forced audit fixes, blanket overrides, or legacy peer-resolution bypasses.
 
@@ -62,18 +64,43 @@ Vitest also uses explicit host adapters for:
 - `@wordpress/hooks`;
 - `@wordpress/url`.
 
-Installed packages such as `@wordpress/element`, `@wordpress/i18n`, `@wordpress/api-fetch`, `@wordpress/data`, and `@wordpress/icons` continue to use their real npm modules during tests. `@wordpress/icons` remains installed because icons are bundled by the current production build rather than externalized.
+The directly pinned WordPress npm runtime baseline is:
+
+- `@wordpress/api-fetch@7.54.0`;
+- `@wordpress/data@10.54.0`;
+- `@wordpress/element@8.6.0`;
+- `@wordpress/i18n@6.27.0`;
+- `@wordpress/icons@15.5.0`.
+
+These packages continue to use their real npm modules during tests. `@wordpress/icons` remains installed because icons are bundled by the current production build rather than externalized.
+
+React and React DOM remain development/test host peers at `18.3.1`. Production WordPress asset manifests externalize the React/WordPress framework handles instead of shipping a second framework runtime.
 
 ## Reviewed npm install scripts
 
-The locked graph currently permits exactly four install-time lifecycle packages:
+The locked graph currently permits exactly three install-time lifecycle packages:
 
 - `@parcel/watcher@2.6.0`;
 - `core-js@3.50.0`;
-- `esbuild@0.28.2`;
 - `fsevents@2.3.3`.
 
-Approvals are exact-version approvals. A new package or version with an install script must be reviewed explicitly before CI will accept it.
+Approvals are exact-version approvals. A new package or version with an install script must be reviewed explicitly before CI will accept it. The former `esbuild@0.28.2` approval was removed when Vite 8 eliminated that install-script package from the resolved graph.
+
+## Known upstream major holds
+
+The remaining npm major updates were tested independently against the final WordPress runtime baseline. They are intentionally not adopted yet.
+
+### Babel 8
+
+`@babel/core@8.0.1` installs and the 107 JavaScript tests pass, but the production Webpack build fails. The current `@wordpress/babel-preset-default@8.54.0` resolves Babel 7 presets; its nested `@babel/preset-env` requires Babel `^7.0.0-0` and rejects Babel 8 during the real production transform.
+
+The Babel 8 probe also increased the audited graph from 503 to 528 packages. Keep `@babel/core@7.29.7` until the WordPress Babel preset and its preset chain support Babel 8 in the production build. Re-evaluate after a relevant WordPress Babel-preset release.
+
+### React 19
+
+React / React DOM `19.2.8` were re-tested after refreshing the WordPress runtime packages. npm can install them only while reporting peer-override warnings, and `npm ls` fails with `ELSPROBLEMS` because `use-memo-one@1.1.3`, reached through `@wordpress/data@10.54.0` and `@wordpress/compose@8.7.0`, declares React support only for `^16.8.0 || ^17.0.0 || ^18.0.0`.
+
+Keep React / React DOM at `18.3.1`. Do not suppress this conflict with `--force`, `--legacy-peer-deps`, or an override. Re-evaluate when the WordPress data/compose dependency path no longer carries that React-18-only peer contract.
 
 ## PHP runtime boundary
 
@@ -89,7 +116,7 @@ Production runtime classes are loaded through the repository-owned `autoload.php
 - resolves every core plugin PHP class;
 - fails if any `/vendor/` file is included.
 
-Composer is still used in development for PHPUnit, Brain Monkey, lockfile validation, and security auditing.
+Composer is still used in development for PHPUnit, Brain Monkey, lockfile validation, and security auditing. The 2026-08-31 direct-dependency inventory reports no pending direct Composer updates and `composer audit --locked` reports no advisories.
 
 ## Vendor-free WordPress distribution
 
@@ -177,7 +204,9 @@ Permanent CI validates:
 
 CI also runs weekly so advisory-database changes are detected without a lockfile change.
 
-GitHub Actions and deployment actions are pinned to immutable commit SHAs. Dependabot groups minor/patch updates by compatibility domain; major upgrades remain isolated.
+GitHub Actions and deployment actions are pinned to immutable commit SHAs. Dependabot groups minor/patch updates by compatibility domain; major upgrades remain isolated so they cannot silently cross the WordPress host/build boundaries.
+
+Current npm groups cover the actual focused graph: WordPress runtime, WordPress build tooling, DnD runtime, JavaScript testing, React host peers, and the remaining build toolchain. Removed packages such as `@wordpress/scripts` are not retained as stale Dependabot targets.
 
 ## WordPress.org deployment contract
 
