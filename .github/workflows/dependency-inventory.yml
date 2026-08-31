@@ -1,0 +1,46 @@
+name: Inventory remaining dependency updates
+
+on:
+  push:
+    branches:
+      - agent/dependency-inventory
+    paths:
+      - '.github/workflows/dependency-inventory.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Inventory npm direct dependencies
+        run: |
+          echo '=== npm outdated (direct dependencies) ==='
+          npm outdated --json --long || true
+          echo '=== selected resolved tooling ==='
+          npm ci
+          npm ls --depth=0 || true
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Inventory Composer direct dependencies
+        run: |
+          echo '=== composer outdated --direct ==='
+          composer outdated --direct --format=json || true
+          echo '=== composer audit ==='
+          composer audit --locked
