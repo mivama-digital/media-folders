@@ -1,6 +1,6 @@
 {
 	"name": "virtual-media-folders",
-	"version": "2.1.5",
+	"version": "2.1.6",
 	"description": "Virtual folder organization and smart management for the WordPress Media Library.",
 	"license": "GPL-2.0-or-later",
 	"scripts": {

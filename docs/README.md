@@ -6,6 +6,7 @@ Reference documentation for Virtual Media Folders as maintained by Mivama Digita
 |----------|-------------|
 | [Development Guide](development.md) | Dev setup, project structure, REST API, Abilities API, hooks, and contribution guidelines |
 | [Dependency Policy](dependencies.md) | Runtime/toolchain versions, security baseline, install-script approvals, CI gates, and update policy |
+| [Release Runbook](release.md) | Version preparation, validation, GitHub release artifacts, WordPress.org deployment boundaries, and rollback rules |
 | [MCP Integration Guide](https://github.com/soderlind/vmfa-ai-ability/blob/main/docs/mcp.md) | Using MCP to upload images, find/create folders, assign media; client config for Claude, GitHub Copilot, and Cursor (requires the upstream AI Ability add-on) |
 | [Hooks Reference](hooks.md) | All actions and filters provided by the plugin and its add-ons |
 | [Add-on Development Guide](addon-development.md) | Building add-on plugins: base classes, namespace, settings tabs, and packaging |
